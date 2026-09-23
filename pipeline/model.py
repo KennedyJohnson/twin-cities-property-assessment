@@ -1,9 +1,12 @@
 """Valuation model, comparable sales, conservative flags, and the backtest.
 
-Joins Minneapolis building characteristics to Hennepin County sales, trains a
-model of sale price from physical features + location + sale month (never the
-assessor's own values), and calibrates a 90% prediction interval with split
-conformal prediction.
+Joins Minneapolis building characteristics to Hennepin County sales and trains a
+model of sale price from physical features, location, nearby sales and history
+(never the assessor's own values). Time is handled outside the trees: a monthly
+hedonic price index is estimated, the trees learn prices with the index removed,
+and the index (trend + seasons) is projected to the month being estimated, so the
+model gives an expected sale price for a given month. Likely (50%) and wide (90%)
+ranges are calibrated with conformalized quantile regression.
 
 A parcel is flagged "possibly over-assessed" only when BOTH:
   1. assessed value > upper end of the calibrated 90% interval, and
@@ -35,13 +38,17 @@ COMP_RADIUS_FT = 2640  # half a mile (Minneapolis X/Y are in feet)
 COMP_MONTHS = 24
 MIN_SALE = 50_000
 TRAIN_YEARS = 5       # older sales drift too far from today's market
+LAG_K = (10, 30)      # nearby-sales features: the 10 and 30 closest earlier sales
+LAG_MONTHS = 24
+SEEDS = 5             # the estimate averages this many models (lower variance)
 PERMIT_YEARS = 5      # permit look-back window
 
 NUMERIC = ["ABOVEGROUNDAREA", "BASEMENTAREA", "PARCELAREA", "YEARBUILT", "STORIES", "GARAGESTALLS",
-           "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y", "months",
+           "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y",
            "permits_n", "permits_major", "permit_fees_log", "years_since_major",
            "prior_sale_adj_log", "years_since_prior",
-           "housing_cases", "nuisance_cases", "vacant_building", "rental", "rental_tier"]
+           "housing_cases", "nuisance_cases", "vacant_building", "rental", "rental_tier",
+           *[f"lag_{s}{k}" for k in LAG_K for s in ("med", "sd")], "lag_dist"]
 CATEGORICAL = ["NEIGHBORHOOD", "CONSTRUCTIONTYPE", "EXTERIORWALL", "PRIMARYHEATING", "ROOF", "ZONING"]
 SUFFIXES = {"ST", "AVE", "RD", "DR", "PL", "LN", "CT", "BLVD", "TER", "PKWY", "CIR", "WAY", "TRL", "HWY", "PKY",
             "N", "S", "E", "W", "NE", "SE", "NW", "SW"}
@@ -193,58 +200,133 @@ def condition_features(df, ref_dates):
     return out.set_index(df.index)
 
 
-def features(df, value_date):
+def spatial_lag(pool, df, ref_dates):
+    """Price per sq ft (index-adjusted, logged) of the nearest pool sales dated before each row's reference month.
+
+    Median and spread of the LAG_K closest sales in the LAG_MONTHS before, plus the typical distance
+    to the 10 closest. A home is never its own neighbor.
+    """
+    p = pool.assign(m=pool.SALE_DATE.dt.to_period("M"))
+    lp = np.log(p.SALE_PRICE / p.ABOVEGROUNDAREA)
+    idx = lp.groupby(p.m).median().rolling(3, center=True, min_periods=1).mean()
+    v_all, xy_all, pid_all = (lp - p.m.map(idx).astype(float)).to_numpy(), p[["X", "Y"]].to_numpy(), p.PID.to_numpy()
+    m_all = p.m.to_numpy()
+    refm = ref_dates.dt.to_period("M").to_numpy()
+    xy, pids = df[["X", "Y"]].to_numpy(dtype=float), df.PID.to_numpy()
+    k = max(LAG_K) + 1
+    out = np.full((len(df), 2 * len(LAG_K) + 1), np.nan)
+    for r in pd.unique(refm):
+        keep = (m_all < r) & (m_all >= r - LAG_MONTHS)
+        ii = np.where((refm == r) & ~np.isnan(xy).any(axis=1))[0]
+        if keep.sum() < k or not len(ii):
+            continue
+        dist, nb = BallTree(xy_all[keep]).query(xy[ii], k=k)
+        own = pid_all[keep][nb] == pids[ii][:, None]
+        v, dist = np.where(own, np.nan, v_all[keep][nb]), np.where(own, np.nan, dist)
+        for j, kk in enumerate(LAG_K):
+            out[ii, 2 * j] = np.nanmedian(v[:, :kk + 1], 1)
+            out[ii, 2 * j + 1] = np.nanstd(v[:, :kk + 1], 1)
+        out[ii, -1] = np.nanmedian(dist[:, :11], 1)
+    names = [f"lag_{s}{kk}" for kk in LAG_K for s in ("med", "sd")] + ["lag_dist"]
+    return pd.DataFrame(out, columns=names, index=df.index)
+
+
+def features(df, value_date, pool):
+    """Model inputs. History uses records before each sale (or before value_date when there is no sale)."""
     X = df.copy()
-    ref = pd.Timestamp(value_date)
-    sale = X.SALE_DATE.fillna(ref)
-    X["months"] = (sale.dt.year - ref.year) * 12 + (sale.dt.month - ref.month)
-    X = X.join(permit_features(X, sale)).join(prior_sale_features(X, sale)).join(condition_features(X, sale))
+    ref = X.SALE_DATE.fillna(pd.Timestamp(value_date))
+    X = (X.join(permit_features(X, ref)).join(prior_sale_features(X, ref)).join(condition_features(X, ref))
+         .join(spatial_lag(pool, X, ref)))
     for c in CATEGORICAL:
         X[c] = X[c].astype("category")
     return X[NUMERIC + CATEGORICAL]
 
 
-def fit_interval_model(train, value_date, seed=0):
-    """Median + quantile models on log price, with split-conformal calibration (CQR).
+def _hgb(seed=0, **kw):
+    params = dict(max_iter=600, learning_rate=0.05, max_leaf_nodes=31, min_samples_leaf=30, l2_regularization=1.0,
+                  categorical_features="from_dtype", random_state=seed)
+    return HistGradientBoostingRegressor(**(params | kw))
 
-    Two ranges are calibrated: a likely range (50%) and a wide range (90%).
-    The calibration set is the most recent 20% of sales, which are closest to the
-    valuation date, so the ranges account for drift between training and prediction.
+
+def _months(d):
+    return pd.PeriodIndex(d.SALE_DATE, freq="M")
+
+
+def hedonic_index(X, y, months):
+    """Monthly log price index: the typical price left over, month by month, after a model that can't see time."""
+    idx = pd.Series(0.0, index=months.unique())
+    for _ in range(2):
+        resid = y - _hgb(max_iter=300).fit(X, y - idx.reindex(months).to_numpy()).predict(X)
+        idx = pd.Series(resid, index=months).groupby(level=0).median().sort_index()
+    return idx.rolling(3, center=True, min_periods=1).mean()
+
+
+def index_at(idx, months):
+    """Index for the given months. Months inside the data use it directly; later months are projected
+    with the average seasonal pattern plus the straight-line trend of the last two years."""
+    months = pd.PeriodIndex(months, freq="M")
+    last = idx.index[-1]
+    t = np.array([(m - last).n for m in idx.index])
+    cal = idx.index.month.to_numpy()
+    seas = (idx - idx.rolling(12, center=True, min_periods=6).mean()).groupby(cal).mean()
+    seas -= seas.mean()
+    level = idx.to_numpy() - seas.reindex(cal).to_numpy()
+    recent = t > -24
+    slope = np.polyfit(t[recent], level[recent], 1)[0]
+    ahead = np.array([(m - last).n for m in months])
+    # The last 12 months' average level is centred 5.5 months before the last month.
+    fc = level[-12:].mean() + slope * (ahead + 5.5) + seas.reindex(months.month).to_numpy()
+    known = idx.reindex(months).to_numpy()
+    return np.where((ahead <= 0) & ~np.isnan(known), known, fc)
+
+
+def fit_interval_model(train, value_date):
+    """Bagged median model + quantile models on index-adjusted log price, with split-conformal calibration (CQR).
+
+    Two ranges are calibrated: a likely range (50%) and a wide range (90%). The calibration set is
+    the most recent 20% of sales, scored with the index *projected* from the older 80%, so the
+    ranges include the error of projecting prices forward.
     """
     train = train.sort_values("SALE_DATE")
     cut = int(len(train) * 0.8)
     fit, cal = train.iloc[:cut], train.iloc[cut:]
-    y_fit, y_cal = np.log(fit.SALE_PRICE), np.log(cal.SALE_PRICE)
-
-    def hgb(**kw):
-        return HistGradientBoostingRegressor(max_iter=600, learning_rate=0.05, max_leaf_nodes=31,
-                                             min_samples_leaf=30, l2_regularization=1.0,
-                                             categorical_features="from_dtype", random_state=seed, **kw)
 
     def quantile_pair(alpha, X, y):
-        return (hgb(loss="quantile", quantile=alpha / 2).fit(X, y),
-                hgb(loss="quantile", quantile=1 - alpha / 2).fit(X, y))
+        return (_hgb(loss="quantile", quantile=alpha / 2).fit(X, y),
+                _hgb(loss="quantile", quantile=1 - alpha / 2).fit(X, y))
 
-    Xf, Xc = features(fit, value_date), features(cal, value_date)
-    Xa, ya = features(train, value_date), np.log(train.SALE_PRICE)
+    Xf, Xa = features(fit, value_date, fit), features(train, value_date, train)
+    # Calibration homes are estimated as if from the end of `fit`, like real estimates.
+    Xc = features(cal.assign(SALE_DATE=pd.NaT), fit.SALE_DATE.max() + pd.Timedelta(days=1), fit)
+    yf, ya, yc = (np.log(d.SALE_PRICE.to_numpy()) for d in (fit, train, cal))
+    idx_f, idx_a = hedonic_index(Xf, yf, _months(fit)), hedonic_index(Xa, ya, _months(train))
+    yf_adj = yf - idx_f.reindex(_months(fit)).to_numpy()
+    ya_adj = ya - idx_a.reindex(_months(train)).to_numpy()
+    yc_adj = yc - index_at(idx_f, _months(cal))
     ranges = {}
     for alpha in ALPHAS:
-        lo, hi = quantile_pair(alpha, Xf, y_fit)
+        lo, hi = quantile_pair(alpha, Xf, yf_adj)
         # Conformity score: how far outside the raw quantile band each calibration sale falls.
-        scores = np.maximum(lo.predict(Xc) - y_cal, y_cal - hi.predict(Xc))
+        scores = np.maximum(lo.predict(Xc) - yc_adj, yc_adj - hi.predict(Xc))
         n = len(scores)
         q = np.quantile(scores, min(1, np.ceil((n + 1) * (1 - alpha)) / n))
         # Refit on all sales so the most recent market is in the model; keep the calibrated margin.
-        ranges[alpha] = (*quantile_pair(alpha, Xa, ya), q)
-    return hgb().fit(Xa, ya), ranges
+        ranges[alpha] = (*quantile_pair(alpha, Xa, ya_adj), q)
+    mids = [_hgb(seed).fit(Xa, ya_adj) for seed in range(SEEDS)]
+    return dict(mids=mids, ranges=ranges, idx=idx_a, pool=train, value_date=value_date)
 
 
-def predict(models, df, value_date):
-    """Estimate plus {alpha: (low, high)} as of the valuation date."""
-    mid, ranges = models
-    X = features(df.assign(SALE_DATE=pd.NaT), value_date)
-    return np.exp(mid.predict(X)), {a: (np.exp(lo.predict(X) - q), np.exp(hi.predict(X) + q))
-                                    for a, (lo, hi, q) in ranges.items()}
+def predict(models, df, when=None):
+    """Expected sale price in month `when` (one date, or one per row; default the valuation date's month),
+    plus {alpha: (low, high)}. Uses only information from before the model's valuation date."""
+    X = features(df.assign(SALE_DATE=pd.NaT), models["value_date"], models["pool"])
+    when = pd.Timestamp(models["value_date"]) if when is None else when
+    when = pd.DatetimeIndex(np.broadcast_to(np.datetime64(pd.Timestamp(when)), len(df))
+                            if isinstance(when, (str, pd.Timestamp)) else pd.to_datetime(when))
+    level = index_at(models["idx"], when.to_period("M"))
+    mid = np.mean([mdl.predict(X) for mdl in models["mids"]], axis=0)
+    return np.exp(mid + level), {a: (np.exp(lo.predict(X) + level - q), np.exp(hi.predict(X) + level + q))
+                                 for a, (lo, hi, q) in models["ranges"].items()}
 
 
 def market_index(sales):
@@ -280,15 +362,27 @@ def comps(parcels, sales, value_date):
     return med, count
 
 
-def assess(parcels, sales_before, value_date):
+def assess(parcels, sales_before, value_date, model_sales=None):
+    """Estimates for every parcel at the valuation date, plus comparable sales.
+
+    The model trains on `model_sales` (default: the sales before the valuation date); comps always
+    use the sales before the valuation date. The fitted model is kept in out.attrs["models"] so
+    callers can estimate other months with predict().
+    """
     sales_before = sales_before[sales_before.SALE_DATE >= pd.Timestamp(value_date) - pd.DateOffset(years=TRAIN_YEARS)]
-    models = fit_interval_model(sales_before, value_date)
-    est, ranges = predict(models, parcels, value_date)
+    if model_sales is None:
+        model_sales, info_date = sales_before, pd.Timestamp(value_date)
+    else:
+        info_date = model_sales.SALE_DATE.max() + pd.Timedelta(days=1)
+        model_sales = model_sales[model_sales.SALE_DATE >= info_date - pd.DateOffset(years=TRAIN_YEARS)]
+    models = fit_interval_model(model_sales, info_date)
+    est, ranges = predict(models, parcels, pd.Timestamp(value_date))
     (low, high), (low50, high50) = ranges[0.10], ranges[0.50]
     comp_med, comp_n = comps(parcels, sales_before, value_date)
     out = parcels.assign(est=est, low=low, high=high, low50=low50, high50=high50,
                          comp_median=comp_med, comp_n=comp_n)
-    out.attrs["train_sales"] = len(sales_before)
+    out.attrs["train_sales"] = len(model_sales)
+    out.attrs["models"] = models
     return out
 
 
@@ -308,8 +402,13 @@ def backtest_frame(asmt_year, county_file):
     sales = qualified_sales(df)
     before = sales[sales.SALE_DATE < value_date]
     after = sales[(sales.SALE_DATE >= value_date) & (sales.SALE_DATE < f"{asmt_year}-10-01")]
-    res = assess(df, before, value_date).set_index("key")
+    res = assess(df, before, value_date)
+    models = res.attrs["models"]
+    res = res.set_index("key")
     test = res.loc[after.key].assign(later_price=after.SALE_PRICE.to_numpy())
+    # The model is scored on its expected price for the month each home actually sold.
+    est, ranges = predict(models, test.reset_index(), after.SALE_DATE.to_numpy())
+    test = test.assign(est=est, low=ranges[0.10][0], high=ranges[0.10][1], low50=ranges[0.50][0], high50=ranges[0.50][1])
     return res, test
 
 
@@ -331,6 +430,8 @@ def accuracy(res, test):
     return {
         "train_sales": res.attrs["train_sales"], "test_sales": int(len(test)),
         "model_median_abs_pct_error": float(np.median(np.abs(test.est / test.later_price - 1))),
+        "model_median_ratio": float(np.median(test.est / test.later_price)),
+        "assessor_median_ratio": float(np.median(test.TOTALVALUE / test.later_price)),
         "assessor_median_abs_pct_error": float(np.median(np.abs(test.TOTALVALUE / test.later_price - 1))),
         "interval_coverage": float(((test.later_price >= test.low) & (test.later_price <= test.high)).mean()),
         "likely_range_coverage": float(((test.later_price >= test.low50) & (test.later_price <= test.high50)).mean()),

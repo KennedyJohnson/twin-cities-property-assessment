@@ -78,6 +78,7 @@
   function render(h, zc) {
     const box = $("result");
     const year = summary ? summary.assessment_year : "";
+    const nowMonth = summary ? new Date(summary.estimate_month + "-15").toLocaleString("en-US", { month: "long", year: "numeric" }) : "";
     const facts = [h.sqft && `${h.sqft.toLocaleString()} sq ft`, h.bd != null && `${h.bd} bed`, h.ba != null && `${h.ba} bath`,
       h.yb && `built ${h.yb}`].filter(Boolean).join(" · ");
     const head = `<div class="eyebrow">${esc(h.nb ? title(h.nb) : "")}</div><h2 style="margin:4px 0">${esc(title(h.a))}</h2>
@@ -104,7 +105,7 @@
       lead = `That's <b>on the low side</b>: lower than ${share(1 - h.pct)} of similar homes nearby sold for, and below our own estimate.`;
       extra = `<p>A lower value usually means a lower tax bill, so there's nothing to do here.</p>`;
     } else if (compsHigh || compsLow) {
-      lead = `The picture is <b>mixed</b>. Similar homes nearby sold for ${compsHigh ? "less" : "more"}, but our estimate, which also accounts for lot size and exact location, puts this home at about ${round(h.e)}.`;
+      lead = `The picture is <b>mixed</b>. Similar homes nearby sold for ${compsHigh ? "less" : "more"}, but our estimate, which also accounts for lot size and exact location, puts this home at about ${round(h.e)} as of January.`;
       extra = `<p>When the two checks disagree, something about this home (a bigger lot, a standout location, its condition) probably sets it apart from the nearby sales. The city's value looks reasonable given that.</p>`;
     } else {
       lead = `That's <b>about the same</b> as what similar homes nearby sold for.`;
@@ -123,9 +124,10 @@
           ${h.c.map((c) => `<tr><td>${esc(title(c[0]))}</td><td>${new Date(c[1] + "-15").toLocaleString("en-US", { month: "short", year: "numeric" })}</td><td>${money(c[2])}</td><td>${money(c[3])}</td><td>${c[4].toLocaleString()}</td><td>${c[5]}</td><td>${c[6] ?? "–"} / ${c[7] ?? "–"}</td></tr>`).join("")}
         </table></div>
         <p class="small muted">*Estimated price as of January ${year}.</p>
-        <p class="small muted">Our computer model, which never sees the city's value, puts this home at about <b>${round(h.e)}</b>.
-          Most likely between ${round(h.lo50)} and ${round(h.hi50)} (about half of homes like this sell in that range).
-          Condition can move it much further: 9 in 10 homes like this sell between ${round(h.lo)} and ${round(h.hi)}.</p>
+        <p class="small muted">Our computer model, which never sees the city's value, expects this home would sell for about <b>${round(h.n)}</b> in ${nowMonth}.
+          Most likely between ${round(h.nlo50)} and ${round(h.nhi50)} (about half of homes like this sell in that range).
+          Condition can move it much further: 9 in 10 homes like this sell between ${round(h.nlo)} and ${round(h.nhi)}.
+          As of January ${year}, the date the city values homes, its estimate is about ${round(h.e)}.</p>
       </details>
       ${help}
       <p class="noprint" style="margin-top:16px"><button class="btn" type="button" id="download">Download as PDF</button></p>
@@ -207,8 +209,9 @@
     const row = (label, fn) => `<tr><td>${label}</td>${years.map((yv) => `<td>${fn(s.backtest[yv])}</td>`).join("")}</tr>`;
     $("bt").innerHTML = `<tr><th></th>${years.map((yv) => `<th>${yv}</th>`).join("")}</tr>` +
       row("Homes tested", (a) => a.test_sales.toLocaleString()) +
-      row("Our model was typically off by", (a) => pct(a.model_median_abs_pct_error)) +
+      row("Our model was typically off by*", (a) => pct(a.model_median_abs_pct_error)) +
       row("The city's value was typically off by", (a) => pct(a.assessor_median_abs_pct_error));
+    $("bt").insertAdjacentHTML("afterend", `<p class="small muted">*Our model estimates the price for the month each home sold, using only data from before January. The city's value is set for January 2 and isn't adjusted for later price changes, so part of its gap is timing.</p>`);
     $("why-no-verdict").textContent = "Why don't we just tell you \"your value is too high\"? We tried. About 1 in 5 homes we would have flagged still sold for more than the city's value, which is too often to be sure. So we show you the comparison and let you decide.";
 
     const hash = decodeURIComponent(location.hash.slice(1));

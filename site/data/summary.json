@@ -1,26 +1,31 @@
 {
  "assessment_year": 2026,
  "value_date": "2026-01-01",
- "built": "2026-09-22",
+ "built": "2026-09-23",
  "parcels": 74614,
  "with_context": 73728,
- "training_sales": 45706,
+ "training_sales": 13714,
+ "estimate_month": "2026-09",
  "backtest": {
   "2025": {
    "train_sales": 15248,
    "test_sales": 1998,
-   "model_median_abs_pct_error": 0.11071738886982013,
+   "model_median_abs_pct_error": 0.09304440644883233,
+   "model_median_ratio": 0.9550594048432317,
+   "assessor_median_ratio": 0.8955420654114281,
    "assessor_median_abs_pct_error": 0.13606553147574818,
-   "interval_coverage": 0.8593593593593594,
-   "likely_range_coverage": 0.44594594594594594
+   "interval_coverage": 0.8808808808808809,
+   "likely_range_coverage": 0.4844844844844845
   },
   "2026": {
    "train_sales": 14639,
    "test_sales": 1729,
-   "model_median_abs_pct_error": 0.1065744198887808,
+   "model_median_abs_pct_error": 0.0935576445829116,
+   "model_median_ratio": 1.0035518954813436,
+   "assessor_median_ratio": 0.9257142857142857,
    "assessor_median_abs_pct_error": 0.12,
-   "interval_coverage": 0.8924233661075767,
-   "likely_range_coverage": 0.4742625795257374
+   "interval_coverage": 0.898207056101793,
+   "likely_range_coverage": 0.5193753614806247
   }
  },
  "flag_backtest": {
@@ -28,23 +33,23 @@
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.007809151307329619,
+   "flagged_share_all_parcels": 0.01047471067295328,
    "not_enough_data_share": 0.2009885340762966,
-   "flagged_test_sales": 22,
-   "flagged_sold_at_or_above_assessed": 0.22727272727272727,
-   "flagged_median_sale_to_assessed": 0.9092361341593834,
-   "in_line_sold_below_90pct_of_assessed": 0.09814169570267131
+   "flagged_test_sales": 12,
+   "flagged_sold_at_or_above_assessed": 0.25,
+   "flagged_median_sale_to_assessed": 0.898483051249551,
+   "in_line_sold_below_90pct_of_assessed": 0.09930715935334873
   },
   "2026": {
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.008202214061704238,
+   "flagged_share_all_parcels": 0.006942396869220254,
    "not_enough_data_share": 0.20040474977886188,
-   "flagged_test_sales": 13,
-   "flagged_sold_at_or_above_assessed": 0.23076923076923078,
-   "flagged_median_sale_to_assessed": 0.8857999454892341,
-   "in_line_sold_below_90pct_of_assessed": 0.1388704318936877
+   "flagged_test_sales": 2,
+   "flagged_sold_at_or_above_assessed": 0.0,
+   "flagged_median_sale_to_assessed": 0.7088983203632885,
+   "in_line_sold_below_90pct_of_assessed": 0.14182058047493404
   }
  },
  "fairness": {

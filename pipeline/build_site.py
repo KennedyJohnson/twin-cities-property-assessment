@@ -112,7 +112,13 @@ def main():
     before = sales[sales.SALE_DATE < VALUE_DATE]
     after = sales[sales.SALE_DATE >= VALUE_DATE]
 
-    res = M.assess(df, before, VALUE_DATE)
+    # The model learns from every sale to date; comparisons with the city's value use its estimate at the
+    # valuation date, and the page also shows its expected sale price for the current month.
+    res = M.assess(df, before, VALUE_DATE, model_sales=sales)
+    now = pd.Timestamp.today().normalize().replace(day=1)
+    est_now, ranges_now = M.predict(res.attrs["models"], res, now)
+    res = res.assign(est_now=est_now, low_now=ranges_now[0.10][0], high_now=ranges_now[0.10][1],
+                     low50_now=ranges_now[0.50][0], high50_now=ranges_now[0.50][1])
     # Homes without a county match still have the city's building data, so they get context too.
     complete = res.ABOVEGROUNDAREA.gt(300) & res.YEARBUILT.gt(1800) & (res.PETITION_REVIEW_IND != "T")
     w, comps, tiers = comp_lists(res, before, VALUE_DATE)
@@ -137,6 +143,8 @@ def main():
             adj = c.adj.to_numpy()
             entry |= {"e": int(round(r.est, -3)), "lo": int(round(r.low, -3)), "hi": int(round(r.high, -3)),
                       "lo50": int(round(r.low50, -3)), "hi50": int(round(r.high50, -3)),
+                      "n": int(round(r.est_now, -3)), "nlo": int(round(r.low_now, -3)), "nhi": int(round(r.high_now, -3)),
+                      "nlo50": int(round(r.low50_now, -3)), "nhi50": int(round(r.high50_now, -3)),
                       "pct": round(float((adj < r.TOTALVALUE).mean()), 2),
                       "cm": int(round(float(np.median(adj)), -3)),
                       "c": [[x.county_addr, x.SALE_DATE.strftime("%Y-%m"), int(x.SALE_PRICE),
@@ -154,7 +162,7 @@ def main():
     summary = {
         "assessment_year": ASMT_YEAR, "value_date": VALUE_DATE, "built": pd.Timestamp.today().strftime("%Y-%m-%d"),
         "parcels": int(len(res)), "with_context": int(sum(e["ok"] for z in by_zip.values() for e in z.values())),
-        "training_sales": int(len(before)),
+        "training_sales": int(res.attrs["train_sales"]), "estimate_month": now.strftime("%Y-%m"),
         "backtest": {y: v["accuracy"] for y, v in backtest.items()},
         "flag_backtest": {y: next(g for g in v["grid"] if g["model_margin"] == 0 and g["comp_margin"] == 0.1 and g["min_comps"] == 5)
                           for y, v in backtest.items()},
