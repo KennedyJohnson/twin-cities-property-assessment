@@ -34,9 +34,11 @@ COMP_RADIUS_FT = 2640  # half a mile (Minneapolis X/Y are in feet)
 COMP_MONTHS = 24
 MIN_SALE = 50_000
 TRAIN_YEARS = 5       # older sales drift too far from today's market
+PERMIT_YEARS = 5      # permit look-back window
 
 NUMERIC = ["ABOVEGROUNDAREA", "BASEMENTAREA", "PARCELAREA", "YEARBUILT", "STORIES", "GARAGESTALLS",
-           "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y", "months"]
+           "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y", "months",
+           "permits_n", "permits_major", "permit_fees_log", "years_since_major"]
 CATEGORICAL = ["NEIGHBORHOOD", "CONSTRUCTIONTYPE", "EXTERIORWALL", "PRIMARYHEATING", "ROOF", "ZONING"]
 SUFFIXES = {"ST", "AVE", "RD", "DR", "PL", "LN", "CT", "BLVD", "TER", "PKWY", "CIR", "WAY", "TRL", "HWY", "PKY",
             "N", "S", "E", "W", "NE", "SE", "NW", "SW"}
@@ -81,22 +83,51 @@ def qualified_sales(df):
     return q[ppsf.between(lo, hi)]
 
 
+def _digits(s):
+    return s.astype(str).str.replace(r"\.0$", "", regex=True).str.replace(r"\D", "", regex=True)
+
+
+def permit_features(df, ref_dates):
+    """Permit history in the PERMIT_YEARS before each row's reference date (no look-ahead)."""
+    p = pd.read_csv(DATA / "permits_sfd.csv.gz", parse_dates=["issueDate"], low_memory=False)
+    p = p[p.status.ne("Cancelled") & p.issueDate.notna()].assign(pid=lambda d: _digits(d.APN))
+    p["major"] = p.workType.isin(["Remodel", "Addition", "NewRes", "New"]) | p.comments.str.contains(
+        r"remodel|addition|kitchen|renovat|finish(?:ed|ing)? basement", case=False, na=False)
+    rows = pd.DataFrame({"row": range(len(df)), "pid": _digits(df.PID).to_numpy(), "ref": ref_dates.to_numpy()})
+    j = rows.merge(p[["pid", "issueDate", "major", "totalFees"]], on="pid")
+    j = j[(j.issueDate < j.ref) & (j.issueDate >= j.ref - pd.DateOffset(years=PERMIT_YEARS))]
+    g = j.groupby("row")
+    last_major = j[j.major].groupby("row").apply(lambda d: (d.ref.iloc[0] - d.issueDate.max()).days / 365.25)
+    out = pd.DataFrame(index=range(len(df)))
+    out["permits_n"] = g.size()
+    out["permits_major"] = j[j.major].groupby("row").size()
+    out["permit_fees_log"] = np.log1p(g.totalFees.sum())
+    out["years_since_major"] = last_major
+    out[["permits_n", "permits_major", "permit_fees_log"]] = out[["permits_n", "permits_major", "permit_fees_log"]].fillna(0)
+    out["years_since_major"] = out.years_since_major.fillna(PERMIT_YEARS + 1)
+    return out.set_index(df.index)
+
+
 def features(df, value_date):
     X = df.copy()
     ref = pd.Timestamp(value_date)
     sale = X.SALE_DATE.fillna(ref)
     X["months"] = (sale.dt.year - ref.year) * 12 + (sale.dt.month - ref.month)
+    X = X.join(permit_features(X, sale))
     for c in CATEGORICAL:
         X[c] = X[c].astype("category")
     return X[NUMERIC + CATEGORICAL]
 
 
 def fit_interval_model(train, value_date, seed=0):
-    """Median + quantile models on log price, then split-conformal calibration (CQR)."""
-    rng = np.random.default_rng(seed)
-    idx = rng.permutation(len(train))
-    cut = int(len(idx) * 0.8)
-    fit, cal = train.iloc[idx[:cut]], train.iloc[idx[cut:]]
+    """Median + quantile models on log price, then split-conformal calibration (CQR).
+
+    The calibration set is the most recent 20% of sales, which are closest to the
+    valuation date, so the interval accounts for drift between training and prediction.
+    """
+    train = train.sort_values("SALE_DATE")
+    cut = int(len(train) * 0.8)
+    fit, cal = train.iloc[:cut], train.iloc[cut:]
     y_fit, y_cal = np.log(fit.SALE_PRICE), np.log(cal.SALE_PRICE)
 
     def hgb(**kw):
@@ -112,6 +143,9 @@ def fit_interval_model(train, value_date, seed=0):
     scores = np.maximum(lo.predict(Xc) - y_cal, y_cal - hi.predict(Xc))
     n = len(scores)
     q = np.quantile(scores, min(1, np.ceil((n + 1) * (1 - ALPHA)) / n))
+    # Refit on all sales so the most recent market is in the model; keep the calibrated margin.
+    Xa, ya = features(train, value_date), np.log(train.SALE_PRICE)
+    mid, lo, hi = hgb().fit(Xa, ya), hgb(loss="quantile", quantile=ALPHA / 2).fit(Xa, ya),         hgb(loss="quantile", quantile=1 - ALPHA / 2).fit(Xa, ya)
     return mid, lo, hi, q
 
 
