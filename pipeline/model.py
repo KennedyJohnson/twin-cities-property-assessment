@@ -39,7 +39,8 @@ PERMIT_YEARS = 5      # permit look-back window
 NUMERIC = ["ABOVEGROUNDAREA", "BASEMENTAREA", "PARCELAREA", "YEARBUILT", "STORIES", "GARAGESTALLS",
            "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y", "months",
            "permits_n", "permits_major", "permit_fees_log", "years_since_major",
-           "prior_sale_adj_log", "years_since_prior"]
+           "prior_sale_adj_log", "years_since_prior",
+           "housing_cases", "nuisance_cases", "vacant_building", "rental", "rental_tier"]
 CATEGORICAL = ["NEIGHBORHOOD", "CONSTRUCTIONTYPE", "EXTERIORWALL", "PRIMARYHEATING", "ROOF", "ZONING"]
 SUFFIXES = {"ST", "AVE", "RD", "DR", "PL", "LN", "CT", "BLVD", "TER", "PKWY", "CIR", "WAY", "TRL", "HWY", "PKY",
             "N", "S", "E", "W", "NE", "SE", "NW", "SW"}
@@ -69,7 +70,11 @@ def load(asmt_year, county_file):
     h = h[h.MUNIC_NM == "MINNEAPOLIS"].copy()
     h["key"] = address_key(h.HOUSE_NO, h.STREET_NM, h.ZIP_CD)
     h = h[~h.key.duplicated(keep=False)]
-    cols = ["key", "PID", "SALE_DATE", "SALE_PRICE", "SALE_CODE_NAME", "PETITION_REVIEW_IND"]
+    # The county's street names keep the direction (e.g. "LINCOLN ST NE"), which the city's sometimes drops.
+    h["county_addr"] = (pd.to_numeric(h.HOUSE_NO, errors="coerce").astype("Int64").astype(str) + " "
+                        + h.FRAC_HOUSE_NO.fillna("").astype(str).str.strip() + " " + h.STREET_NM.astype(str))
+    h["county_addr"] = h.county_addr.str.split().str.join(" ").str.replace(r" ([NS]) ([EW])$", r" \1\2", regex=True)
+    cols = ["key", "PID", "county_addr", "SALE_DATE", "SALE_PRICE", "SALE_CODE_NAME", "PETITION_REVIEW_IND"]
     df = m.merge(h[cols], on="key", how="left", indicator=True)
     df["matched"] = df._merge == "both"
     return df.drop(columns="_merge")
@@ -150,12 +155,49 @@ def prior_sale_features(df, ref_dates):
     return out.set_index(df.index)  # NaN when there is no earlier sale; the model handles missing values
 
 
+_CONDITION = None
+
+
+def condition_features(df, ref_dates):
+    """Inspection and rental-license history before each row's reference date (no look-ahead).
+
+    Housing/nuisance inspection cases in the PERMIT_YEARS window, whether the home was ever
+    in the Vacant Building Registration program, and rental license status and tier.
+    """
+    global _CONDITION
+    if _CONDITION is None:
+        insp = pd.read_csv(DATA / "inspections.csv.gz", parse_dates=["Completed_Date"], low_memory=False)
+        insp = insp.dropna(subset=["Completed_Date"]).assign(pid=lambda d: _pid(d.APN))
+        insp = insp.groupby(["pid", "Violation_Case_Number", "Case_Type"], as_index=False).Completed_Date.min()
+        rent = pd.read_csv(DATA / "rental_licenses.csv.gz", parse_dates=["issueDate"]).assign(pid=lambda d: _pid(d.apn))
+        rent["tier_n"] = pd.to_numeric(rent.tier.str.extract(r"(\d)")[0], errors="coerce")
+        _CONDITION = insp, rent
+    insp, rent = _CONDITION
+    rows = pd.DataFrame({"row": range(len(df)), "pid": _pid(df.PID).to_numpy(), "ref": ref_dates.to_numpy()})
+
+    j = rows.merge(insp, on="pid")
+    j = j[j.Completed_Date < j.ref]
+    recent = j[j.Completed_Date >= j.ref - pd.DateOffset(years=PERMIT_YEARS)]
+    out = pd.DataFrame(index=range(len(df)))
+    out["housing_cases"] = recent[recent.Case_Type.isin(["HIS", "FIS"])].groupby("row").size()
+    out["nuisance_cases"] = recent[recent.Case_Type == "Nuisance"].groupby("row").size()
+    out["vacant_building"] = j[j.Case_Type == "VBR"].groupby("row").size().clip(upper=1)
+
+    r = rows.merge(rent[["pid", "issueDate", "tier_n"]], on="pid")
+    r = r[r.issueDate < r.ref]
+    out["rental"] = r.groupby("row").size().clip(upper=1)
+    out["rental_tier"] = r.groupby("row").tier_n.max()
+    cols = ["housing_cases", "nuisance_cases", "vacant_building", "rental"]
+    out[cols] = out[cols].fillna(0)
+    return out.set_index(df.index)
+
+
 def features(df, value_date):
     X = df.copy()
     ref = pd.Timestamp(value_date)
     sale = X.SALE_DATE.fillna(ref)
     X["months"] = (sale.dt.year - ref.year) * 12 + (sale.dt.month - ref.month)
-    X = X.join(permit_features(X, sale)).join(prior_sale_features(X, sale))
+    X = X.join(permit_features(X, sale)).join(prior_sale_features(X, sale)).join(condition_features(X, sale))
     for c in CATEGORICAL:
         X[c] = X[c].astype("category")
     return X[NUMERIC + CATEGORICAL]
