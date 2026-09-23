@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local data snapshots (public, but large; rebuilt by the pipeline)
+data/
