@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minneapolis Assessment Check</title>
+<meta name="description" content="Free context on a Minneapolis home's assessed value: how it compares with similar nearby sales, built on public data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f2; --card: #fcfcfb; --border: #e3e1dc; --grid: #ecebe7;
+  --ink: #0b0b0b; --ink2: #52514e; --muted: #7c7a75;
+  --accent: #2a78d6; --accent-soft: #cde2fb; --warm: #eb6834; --band: #b7d3f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #121211; --card: #1a1a19; --border: #2e2e2b; --grid: #262624;
+    --ink: #fff; --ink2: #c3c2b7; --muted: #8f8e86;
+    --accent: #3987e5; --accent-soft: #104281; --warm: #d95926; --band: #1c5cab;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --card: #1a1a19; --border: #2e2e2b; --grid: #262624;
+  --ink: #fff; --ink2: #c3c2b7; --muted: #8f8e86;
+  --accent: #3987e5; --accent-soft: #104281; --warm: #d95926; --band: #1c5cab;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Inter, system-ui, sans-serif; }
+main { max-width: 880px; margin: 0 auto; padding: 40px 16px 80px; }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.02em; }
+h2 { font-size: 22px; margin: 48px 0 8px; }
+h3 { font-size: 15px; margin: 0 0 4px; }
+.eyebrow { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.lede { color: var(--ink2); font-size: 18px; max-width: 640px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-top: 16px; }
+.search { position: relative; margin-top: 24px; }
+.search input { width: 100%; font: inherit; font-size: 17px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--ink); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.suggest { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; z-index: 5; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.suggest button { display: block; width: 100%; text-align: left; font: inherit; padding: 10px 16px; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.suggest button:hover, .suggest button.active { background: var(--accent-soft); }
+.hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 16px; }
+.stat { background: var(--bg); border-radius: 10px; padding: 12px 14px; }
+.stat .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 13px; color: var(--ink2); }
+.big { font-size: 19px; margin: 8px 0; }
+.verdict { font-size: 19px; border-left: 4px solid; padding: 4px 0 4px 14px; margin: 16px 0 8px; }
+details summary { cursor: pointer; }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.tablewrap { overflow-x: auto; }
+svg { display: block; width: 100%; height: auto; }
+svg text { fill: var(--muted); font: 12px Inter, sans-serif; }
+svg .lbl { fill: var(--ink2); font-weight: 500; }
+ul.list { padding-left: 20px; color: var(--ink2); } ul.list li { margin: 4px 0; }
+a { color: var(--accent); }
+.btn { display: inline-block; font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer; text-decoration: none; }
+.theme-btn { position: fixed; top: 12px; right: 12px; border-radius: 20px; font-size: 13px; padding: 6px 12px; }
+.note { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink2); }
+footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: 13px; }
+@media print { .search, .theme-btn, #about, #fairness, #privacy, .noprint { display: none !important; } body { background: #fff; } .card { border: 0; } }
+</style>
+</head>
+<body>
+<button class="btn theme-btn noprint" id="theme" type="button">Dark mode</button>
+<main>
+  <div class="eyebrow">Minneapolis homes · <span id="year">2026</span> property values</div>
+  <h1>Is your home's value in line with similar homes?</h1>
+  <p class="lede">The city sets a value for your home each year, and your property tax is based on it. Type your address to see how that value compares with what similar homes near you actually sold for.</p>
+
+  <div class="search">
+    <input id="q" type="search" autocomplete="off" placeholder="Type your address, e.g. 2959 Lincoln St" aria-label="Address">
+    <div class="suggest" id="suggest" hidden></div>
+  </div>
+  <p class="hint">Houses in Minneapolis only (not condos or duplexes yet). What you type stays in your browser.</p>
+
+  <div id="result"></div>
+
+  <section id="fairness">
+    <h2>Across the city</h2>
+    <p id="fair-sub"></p>
+    <div class="card">
+      <h3>How the city's values compare with sale prices</h3>
+      <p class="small muted" id="fair-chart-sub"></p>
+      <div id="decile"></div>
+    </div>
+  </section>
+
+  <section id="about">
+    <details class="card">
+      <summary><b>How we did this, and how accurate it is</b></summary>
+      <ul class="list">
+        <li>We looked at every regular home sale in Minneapolis over the past five years, using public records from the city and Hennepin County.</li>
+        <li><b>Similar homes</b> are houses within about half a mile that are close in size and age, sold in the two years before January. Their prices are updated to January using how much Minneapolis prices changed in that time.</li>
+        <li>We also built a computer model that estimates a home's price from its size, age, rooms, location, past sale and building permits. It never sees the city's values.</li>
+      </ul>
+      <p class="small muted">Tested on homes that sold <i>after</i> the city set its values:</p>
+      <div class="tablewrap"><table id="bt"></table></div>
+      <p class="note small" id="why-no-verdict" style="margin-top:16px"></p>
+    </details>
+  </section>
+
+  <section id="privacy">
+    <details class="card">
+      <summary><b>Did you know your name is probably public?</b></summary>
+      <p>If you own a home in Hennepin County, your name, sale price, sale date, value and tax history are likely visible to anyone on the <a href="https://www.hennepin.us/en/residents/property/property-information-search" target="_blank" rel="noopener">county's property search</a>. Property ownership is public record in Minnesota, as it is almost everywhere in the U.S. It keeps things accountable: anyone can check whether taxes are fair, buyers and lenders can confirm who owns a property, and cities know who's responsible for a problem property.</p>
+      <p><b>This site never shows owner names.</b> It only uses property details and sale prices.</p>
+      <p><b>If you want more privacy:</b></p>
+      <ul class="list">
+        <li><b>Hold the property in a trust or LLC.</b> The public record then shows the trust or company instead of your name. It has legal and tax consequences (and can affect things like your homestead status), so talk to a real estate attorney first.</li>
+        <li><b>Safe at Home.</b> If you're a survivor of domestic violence, sexual assault or stalking, or otherwise fear for your safety, Minnesota's address confidentiality program can keep your name and address out of property records. <a href="https://www.sos.state.mn.us/safe-at-home/" target="_blank" rel="noopener">Minnesota Secretary of State: Safe at Home</a> (<a href="https://www.revisor.mn.gov/statutes/cite/13.045" target="_blank" rel="noopener">Minn. Stat. § 13.045</a>).</li>
+        <li><b>Judges and some other officials</b> can ask to have their personal information withheld under state law (<a href="https://www.revisor.mn.gov/statutes/cite/13.991" target="_blank" rel="noopener">Minn. Stat. § 13.991</a>, <a href="https://www.revisor.mn.gov/statutes/cite/480.50" target="_blank" rel="noopener">§ 480.50</a>).</li>
+      </ul>
+      <p class="small muted">Questions about your records: Hennepin County property records, 612-348-3011.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p><b>This is not an appraisal, and not legal or tax advice.</b> It can be wrong, and it can't see a home's condition or updates. Not affiliated with the City of Minneapolis, Hennepin County or the State of Minnesota.</p>
+    <p>Data: <a href="https://opendata.minneapolismn.gov/datasets/assessing-department-parcel-data-2026">Minneapolis Assessing Department Parcel Data</a>, <a href="https://opendata.minneapolismn.gov/">Minneapolis CCS Permits</a>, <a href="https://gis-hennepin.opendata.arcgis.com/datasets/7975aabf6e1e42998a40a4b085ffefdf_1">Hennepin County Parcels</a> (furnished "as is"), <a href="https://metrogis.org/how-do-i-get/parcel-data/">MetroGIS Regional Parcel Dataset</a>. Methods follow the <a href="https://www.revenue.state.mn.us/sales-ratio-studies">MN Dept. of Revenue sales ratio study</a>. Code: <a href="https://github.com/KennedyJohnson/twin-cities-property-assessment">GitHub</a>.</p>
+  </footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
