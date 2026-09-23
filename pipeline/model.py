@@ -38,7 +38,8 @@ PERMIT_YEARS = 5      # permit look-back window
 
 NUMERIC = ["ABOVEGROUNDAREA", "BASEMENTAREA", "PARCELAREA", "YEARBUILT", "STORIES", "GARAGESTALLS",
            "TOTALBEDROOMS", "TOTALBATHROOMS", "FIREPLACES", "X", "Y", "months",
-           "permits_n", "permits_major", "permit_fees_log", "years_since_major"]
+           "permits_n", "permits_major", "permit_fees_log", "years_since_major",
+           "prior_sale_adj_log", "years_since_prior"]
 CATEGORICAL = ["NEIGHBORHOOD", "CONSTRUCTIONTYPE", "EXTERIORWALL", "PRIMARYHEATING", "ROOF", "ZONING"]
 SUFFIXES = {"ST", "AVE", "RD", "DR", "PL", "LN", "CT", "BLVD", "TER", "PKWY", "CIR", "WAY", "TRL", "HWY", "PKY",
             "N", "S", "E", "W", "NE", "SE", "NW", "SW"}
@@ -108,12 +109,53 @@ def permit_features(df, ref_dates):
     return out.set_index(df.index)
 
 
+def _pid(s):
+    return pd.to_numeric(_digits(s), errors="coerce")
+
+
+def all_sales():
+    """Every recorded sale: MetroGIS annual snapshots plus the current county file."""
+    hist = pd.read_csv(DATA / "sale_history.csv.gz", parse_dates=["SALE_DATE"])
+    hist = pd.DataFrame({"pid": _pid(hist.COUNTY_PIN), "date": hist.SALE_DATE, "price": hist.SALE_VALUE})
+    cur = pd.read_csv(sorted(DATA.glob("hennepin_*.csv.gz"))[-1], usecols=["PID", "MUNIC_NM", "SALE_DATE", "SALE_PRICE"],
+                      parse_dates=["SALE_DATE"], low_memory=False)
+    cur = cur[cur.MUNIC_NM == "MINNEAPOLIS"]
+    cur = pd.DataFrame({"pid": _pid(cur.PID), "date": cur.SALE_DATE, "price": cur.SALE_PRICE})
+    s = pd.concat([hist, cur]).dropna()
+    s = s[s.price >= MIN_SALE]
+    s["month"] = s.date.dt.to_period("M")
+    return s.drop_duplicates(["pid", "month"])
+
+
+_SALES = None
+
+
+def prior_sale_features(df, ref_dates):
+    """The home's most recent earlier sale, adjusted to the reference month with a trailing market index."""
+    global _SALES
+    if _SALES is None:
+        _SALES = all_sales()
+    s = _SALES
+    # Trailing index, shifted a month so the reference month never uses its own (possibly later) sales.
+    idx = np.exp(s.groupby("month").price.apply(lambda p: np.log(p).median()).rolling(3, min_periods=1).mean().shift(1))
+    idx = idx.bfill()
+    rows = pd.DataFrame({"row": range(len(df)), "pid": _pid(df.PID).to_numpy(),
+                         "ref": ref_dates.dt.to_period("M").to_numpy()})
+    j = rows.merge(s[["pid", "month", "price"]], on="pid")
+    j = j[j.month < j.ref].sort_values("month").groupby("row").last()
+    ref_idx = j.ref.map(idx).astype(float).fillna(idx.iloc[-1])
+    out = pd.DataFrame(index=range(len(df)))
+    out["prior_sale_adj_log"] = np.log(j.price * ref_idx / j.month.map(idx).astype(float))
+    out["years_since_prior"] = (j.ref - j.month).apply(lambda d: d.n / 12)
+    return out.set_index(df.index)  # NaN when there is no earlier sale; the model handles missing values
+
+
 def features(df, value_date):
     X = df.copy()
     ref = pd.Timestamp(value_date)
     sale = X.SALE_DATE.fillna(ref)
     X["months"] = (sale.dt.year - ref.year) * 12 + (sale.dt.month - ref.month)
-    X = X.join(permit_features(X, sale))
+    X = X.join(permit_features(X, sale)).join(prior_sale_features(X, sale))
     for c in CATEGORICAL:
         X[c] = X[c].astype("category")
     return X[NUMERIC + CATEGORICAL]
