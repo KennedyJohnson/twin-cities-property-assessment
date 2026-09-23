@@ -28,30 +28,57 @@ MAX_COMPS = 8
 MIN_GROUP = 30  # minimum sales to report a group's fairness statistics
 
 
+# Search tiers for comparable sales, tried in order until at least MIN_COMPS are found:
+# (radius in feet, max house-size difference, max age difference in years, months of sales,
+#  max lot-size difference). Lot size matters: a big lot in a prime spot carries a lot of value.
+COMP_TIERS = [
+    (2640, 0.20, 15, 24, 0.50),  # within half a mile, close in size, age and lot, last two years
+    (5280, 0.25, 25, 24, 0.60),  # within a mile, a bit looser
+    (5280, 0.30, 30, 36, 0.75),  # within a mile, looser still, last three years
+]
+
+
 def comp_lists(parcels, sales, value_date):
-    """Up to MAX_COMPS most similar nearby sales per parcel, with time-adjusted prices."""
+    """Most similar nearby sales per parcel (time-adjusted), widening the search only when needed.
+
+    Returns the sales table, a list of comp indices per parcel (most similar first), and the
+    tier used (0 = closest search; -1 = not enough even at the widest search).
+    """
     ref = pd.Timestamp(value_date).to_period("M")
+    oldest = max(t[3] for t in COMP_TIERS)
     w = sales[(sales.SALE_DATE.dt.to_period("M") < ref)
-              & (sales.SALE_DATE >= pd.Timestamp(value_date) - pd.DateOffset(months=M.COMP_MONTHS))].copy()
+              & (sales.SALE_DATE >= pd.Timestamp(value_date) - pd.DateOffset(months=oldest))].copy()
     idx = M.market_index(sales)
     base = idx[idx.index < ref].iloc[-1]
     w["adj"] = w.SALE_PRICE * base / w.SALE_DATE.dt.to_period("M").map(idx).astype(float)
     w = w.reset_index(drop=True)
+    age_months = ((ref - w.SALE_DATE.dt.to_period("M")).apply(lambda d: d.n)).to_numpy()
     tree = BallTree(w[["X", "Y"]].to_numpy())
-    near, dist = tree.query_radius(parcels[["X", "Y"]].to_numpy(), r=M.COMP_RADIUS_FT, return_distance=True)
-    area, yb, pid = (w[c].to_numpy() for c in ["ABOVEGROUNDAREA", "YEARBUILT", "PID"])
-    out = []
-    for (a, y, p), cand, d in zip(parcels[["ABOVEGROUNDAREA", "YEARBUILT", "PID"]].to_numpy(), near, dist):
-        if not a > 0:
-            out.append([])
+    max_r = max(t[0] for t in COMP_TIERS)
+    near, dist = tree.query_radius(parcels[["X", "Y"]].to_numpy(), r=max_r, return_distance=True)
+    area, yb, pid, lot = (w[c].to_numpy() for c in ["ABOVEGROUNDAREA", "YEARBUILT", "PID", "PARCELAREA"])
+    out, tiers = [], []
+    for (a, y, p, lt), cand, d in zip(parcels[["ABOVEGROUNDAREA", "YEARBUILT", "PID", "PARCELAREA"]].to_numpy(), near, dist):
+        if not (a > 0 and y > 1800):
+            out.append(np.array([], dtype=int))
+            tiers.append(-1)
             continue
         size_gap = np.abs(area[cand] / a - 1)
-        ok = (size_gap <= 0.20) & (np.abs(yb[cand] - y) <= 15) & (pid[cand] != p)
-        cand, d, size_gap = cand[ok], d[ok], size_gap[ok]
-        # Rank by a simple similarity score: distance (per quarter mile) + size gap + age gap.
-        score = d / 1320 + size_gap * 5 + np.abs(yb[cand] - y) / 15
-        out.append(cand[np.argsort(score)])
-    return w, out
+        age_gap = np.abs(yb[cand] - y)
+        lot_gap = np.abs(lot[cand] / lt - 1) if lt > 0 else np.zeros(len(cand))
+        not_self = pid[cand] != p if pd.notna(p) else np.ones(len(cand), bool)
+        chosen, tier = np.array([], dtype=int), -1
+        for t, (radius, size_tol, age_tol, months, lot_tol) in enumerate(COMP_TIERS):
+            ok = ((d <= radius) & (size_gap <= size_tol) & (age_gap <= age_tol) & (age_months[cand] <= months)
+                  & (lot_gap <= lot_tol) & not_self)
+            if ok.sum() >= M.MIN_COMPS:
+                # Rank by similarity: distance (per quarter mile) + house-size, age and lot-size gaps.
+                score = d[ok] / 1320 + size_gap[ok] * 5 + age_gap[ok] / 15 + lot_gap[ok] * 2
+                chosen, tier = cand[ok][np.argsort(score)], t
+                break
+        out.append(chosen)
+        tiers.append(tier)
+    return w, out, tiers
 
 
 def fairness(res, sales_after):
@@ -86,8 +113,9 @@ def main():
     after = sales[sales.SALE_DATE >= VALUE_DATE]
 
     res = M.assess(df, before, VALUE_DATE)
-    complete = res.ABOVEGROUNDAREA.gt(300) & res.YEARBUILT.gt(1800) & res.matched
-    w, comps = comp_lists(res, before, VALUE_DATE)
+    # Homes without a county match still have the city's building data, so they get context too.
+    complete = res.ABOVEGROUNDAREA.gt(300) & res.YEARBUILT.gt(1800) & (res.PETITION_REVIEW_IND != "T")
+    w, comps, tiers = comp_lists(res, before, VALUE_DATE)
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "zip").mkdir(exist_ok=True)
@@ -96,18 +124,19 @@ def main():
         addr = r.county_addr if isinstance(r.county_addr, str) else " ".join(str(r.ADDRESSFORMATTED).split())
         zc = str(int(r.ZIP1)) if pd.notna(r.ZIP1) else "unknown"
         c = w.iloc[comps[i]] if len(comps[i]) else w.iloc[[]]
-        enough = bool(complete.iloc[i] and len(c) >= M.MIN_COMPS)
+        enough = bool(complete.iloc[i] and tiers[i] >= 0)
         entry = {
             "a": addr, "nb": r.NEIGHBORHOOD, "v": int(r.TOTALVALUE),
             "sqft": int(r.ABOVEGROUNDAREA) if pd.notna(r.ABOVEGROUNDAREA) else None,
             "yb": int(r.YEARBUILT) if pd.notna(r.YEARBUILT) else None,
             "bd": int(r.TOTALBEDROOMS) if pd.notna(r.TOTALBEDROOMS) else None,
             "ba": float(r.TOTALBATHROOMS) if pd.notna(r.TOTALBATHROOMS) else None,
-            "ok": enough, "nc": int(len(c)),
+            "ok": enough, "nc": int(len(c)), "tier": tiers[i],
         }
         if enough:
             adj = c.adj.to_numpy()
             entry |= {"e": int(round(r.est, -3)), "lo": int(round(r.low, -3)), "hi": int(round(r.high, -3)),
+                      "lo50": int(round(r.low50, -3)), "hi50": int(round(r.high50, -3)),
                       "pct": round(float((adj < r.TOTALVALUE).mean()), 2),
                       "cm": int(round(float(np.median(adj)), -3)),
                       "c": [[x.county_addr, x.SALE_DATE.strftime("%Y-%m"), int(x.SALE_PRICE),

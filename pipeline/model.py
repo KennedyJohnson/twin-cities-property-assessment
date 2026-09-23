@@ -27,7 +27,8 @@ from sklearn.neighbors import BallTree
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
-ALPHA = 0.10          # 90% prediction interval
+ALPHA = 0.10          # wide range: 90% prediction interval (used for flags)
+ALPHAS = (0.10, 0.50)  # wide (90%) and likely (50%) ranges
 MIN_COMPS = 5
 COMP_MARGIN = 0.10    # comps' median must be >=10% below assessed value
 COMP_RADIUS_FT = 2640  # half a mile (Minneapolis X/Y are in feet)
@@ -204,10 +205,11 @@ def features(df, value_date):
 
 
 def fit_interval_model(train, value_date, seed=0):
-    """Median + quantile models on log price, then split-conformal calibration (CQR).
+    """Median + quantile models on log price, with split-conformal calibration (CQR).
 
+    Two ranges are calibrated: a likely range (50%) and a wide range (90%).
     The calibration set is the most recent 20% of sales, which are closest to the
-    valuation date, so the interval accounts for drift between training and prediction.
+    valuation date, so the ranges account for drift between training and prediction.
     """
     train = train.sort_values("SALE_DATE")
     cut = int(len(train) * 0.8)
@@ -219,24 +221,30 @@ def fit_interval_model(train, value_date, seed=0):
                                              min_samples_leaf=30, l2_regularization=1.0,
                                              categorical_features="from_dtype", random_state=seed, **kw)
 
+    def quantile_pair(alpha, X, y):
+        return (hgb(loss="quantile", quantile=alpha / 2).fit(X, y),
+                hgb(loss="quantile", quantile=1 - alpha / 2).fit(X, y))
+
     Xf, Xc = features(fit, value_date), features(cal, value_date)
-    mid = hgb().fit(Xf, y_fit)
-    lo = hgb(loss="quantile", quantile=ALPHA / 2).fit(Xf, y_fit)
-    hi = hgb(loss="quantile", quantile=1 - ALPHA / 2).fit(Xf, y_fit)
-    # Conformity score: how far outside the raw quantile band each calibration sale falls.
-    scores = np.maximum(lo.predict(Xc) - y_cal, y_cal - hi.predict(Xc))
-    n = len(scores)
-    q = np.quantile(scores, min(1, np.ceil((n + 1) * (1 - ALPHA)) / n))
-    # Refit on all sales so the most recent market is in the model; keep the calibrated margin.
     Xa, ya = features(train, value_date), np.log(train.SALE_PRICE)
-    mid, lo, hi = hgb().fit(Xa, ya), hgb(loss="quantile", quantile=ALPHA / 2).fit(Xa, ya),         hgb(loss="quantile", quantile=1 - ALPHA / 2).fit(Xa, ya)
-    return mid, lo, hi, q
+    ranges = {}
+    for alpha in ALPHAS:
+        lo, hi = quantile_pair(alpha, Xf, y_fit)
+        # Conformity score: how far outside the raw quantile band each calibration sale falls.
+        scores = np.maximum(lo.predict(Xc) - y_cal, y_cal - hi.predict(Xc))
+        n = len(scores)
+        q = np.quantile(scores, min(1, np.ceil((n + 1) * (1 - alpha)) / n))
+        # Refit on all sales so the most recent market is in the model; keep the calibrated margin.
+        ranges[alpha] = (*quantile_pair(alpha, Xa, ya), q)
+    return hgb().fit(Xa, ya), ranges
 
 
 def predict(models, df, value_date):
-    mid, lo, hi, q = models
-    X = features(df.assign(SALE_DATE=pd.NaT), value_date)  # value as of the valuation date
-    return np.exp(mid.predict(X)), np.exp(lo.predict(X) - q), np.exp(hi.predict(X) + q)
+    """Estimate plus {alpha: (low, high)} as of the valuation date."""
+    mid, ranges = models
+    X = features(df.assign(SALE_DATE=pd.NaT), value_date)
+    return np.exp(mid.predict(X)), {a: (np.exp(lo.predict(X) - q), np.exp(hi.predict(X) + q))
+                                    for a, (lo, hi, q) in ranges.items()}
 
 
 def market_index(sales):
@@ -275,9 +283,11 @@ def comps(parcels, sales, value_date):
 def assess(parcels, sales_before, value_date):
     sales_before = sales_before[sales_before.SALE_DATE >= pd.Timestamp(value_date) - pd.DateOffset(years=TRAIN_YEARS)]
     models = fit_interval_model(sales_before, value_date)
-    est, low, high = predict(models, parcels, value_date)
+    est, ranges = predict(models, parcels, value_date)
+    (low, high), (low50, high50) = ranges[0.10], ranges[0.50]
     comp_med, comp_n = comps(parcels, sales_before, value_date)
-    out = parcels.assign(est=est, low=low, high=high, comp_median=comp_med, comp_n=comp_n)
+    out = parcels.assign(est=est, low=low, high=high, low50=low50, high50=high50,
+                         comp_median=comp_med, comp_n=comp_n)
     out.attrs["train_sales"] = len(sales_before)
     return out
 
@@ -323,6 +333,7 @@ def accuracy(res, test):
         "model_median_abs_pct_error": float(np.median(np.abs(test.est / test.later_price - 1))),
         "assessor_median_abs_pct_error": float(np.median(np.abs(test.TOTALVALUE / test.later_price - 1))),
         "interval_coverage": float(((test.later_price >= test.low) & (test.later_price <= test.high)).mean()),
+        "likely_range_coverage": float(((test.later_price >= test.low50) & (test.later_price <= test.high50)).mean()),
     }
 
 

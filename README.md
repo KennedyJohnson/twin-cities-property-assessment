@@ -2,7 +2,7 @@
 
 A free tool that helps Twin Cities homeowners see whether their property's assessed value (the "estimated market value" on their tax statement) looks out of line with what comparable homes actually sold for, and, only when the evidence is strong, how to raise it with the assessor.
 
-**Status:** early development. Data ingestion works for Hennepin County; the valuation model and site are in progress.
+**Live site:** https://kennedyjohnson.github.io/twin-cities-property-assessment/ (Minneapolis single-family homes, 2026 assessment)
 
 ## Principles
 
