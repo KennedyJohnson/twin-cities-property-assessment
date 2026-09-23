@@ -7,16 +7,6 @@
   let index = null, keys = [], summary = null;
   const zipCache = {};
 
-  // ---- theme ----
-  const setTheme = (t) => {
-    document.documentElement.setAttribute("data-theme", t);
-    $("theme").textContent = t === "dark" ? "Light mode" : "Dark mode";
-    try { localStorage.setItem("theme", t); } catch (e) { /* unavailable */ }
-  };
-  let saved = null;
-  try { saved = localStorage.getItem("theme"); } catch (e) { /* unavailable */ }
-  setTheme(saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-  $("theme").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
 
   const norm = (s) => s.toUpperCase().replace(/[.,#]/g, " ").replace(/\b(STREET)\b/g, "ST").replace(/\b(AVENUE)\b/g, "AVE")
     .replace(/\s+/g, " ").trim();
