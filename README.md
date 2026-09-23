@@ -1,83 +1,76 @@
-# Twin Cities Property Assessment Check
+# Is your home's value in line with similar homes?
 
-A free tool that helps Twin Cities homeowners see whether their property's assessed value (the "estimated market value" on their tax statement) looks out of line with what comparable homes actually sold for, and, only when the evidence is strong, how to raise it with the assessor.
+A free tool for Minneapolis homeowners: look up a house and see how the city's assessed value (the basis of your property tax) compares with what similar nearby homes actually sold for, plus an independent estimate from a model that never sees the city's value.
 
 **Live site:** https://kennedyjohnson.github.io/twin-cities-property-assessment/ (Minneapolis single-family homes, 2026 assessment)
 
-## Principles
+## What it shows
 
-1. **Only flag when we're really sure.** Most homes will show "in line with comparable sales" or "not enough data." A home is only flagged as *possibly over-assessed* when several independent checks agree, and the flag threshold is calibrated so that it is rarely wrong on held-out sales (see [Flagging policy](#flagging-policy)). We would rather miss a case than send someone to an appeal they will lose.
-2. **Informational, not advice.** This is not an appraisal, and not legal or tax advice. It points people to the official appeal process and the evidence the assessor asks for.
-3. **Public data only, no personal names.** Owner and taxpayer names are never downloaded. The site shows only property characteristics and values that the county already publishes per parcel.
-4. **Free to run.** Data refresh and model training run on GitHub Actions; the site is static files on Vercel/GitHub Pages. No paid APIs or servers.
+- **The comparison:** the city's value next to time-adjusted prices of similar nearby sales (close in location, house size, age and lot size), in plain language: *about the same*, *on the high side*, *on the low side*, or *mixed*.
+- **An independent estimate** with two calibrated ranges: a likely range (about half of homes sell inside it) and a wide range (9 in 10).
+- **Citywide fairness:** the city's value as a share of sale price across price tiers, measured on sales after the valuation date.
+- **Next steps:** how to talk to the assessor and appeal, with official links. Plus how owner names appear in public records and how to keep yours private.
 
-## How it works (planned)
+## Design principles
 
-```
-county open data ──► fetch (monthly, GitHub Actions) ──► clean + qualify sales
-                                                           │
-                            valuation model (trained on qualified sales, time-based validation)
-                                                           │
-             per-parcel: assessed value vs. model range vs. nearby comparable sales
-                                                           │
-                        static JSON per ZIP code ──► static site (address search)
-```
+1. **No verdicts we can't back up.** An "over-assessed" flag was built and backtested first. About 1 in 5 flagged homes still sold at or above their assessed value, because public data can't see a home's condition. So the site shows context instead, and only says "high side" when both the comparable sales and the model agree.
+2. **Informational, not advice.** Not an appraisal, and not legal or tax advice.
+3. **No personal names.** Owner, taxpayer and applicant names are never downloaded. Only property characteristics, values and sale prices are published.
+4. **Free to run.** Python pipeline, static site on GitHub Pages, no paid APIs or servers.
 
-## Flagging policy
+## Method
 
-A parcel is shown as **possibly over-assessed** only if *all* of these hold:
+- **Model:** gradient-boosted trees (scikit-learn) on log sale price, trained on arm's-length Minneapolis sales from the five years before the January 2 valuation date.
+  - **Inputs:** house size, age, rooms, lot, construction, location, the home's own previous sale adjusted to the valuation date, building permits, and housing-inspection, vacant-building and rental-license history.
+  - All history features only use records dated before each sale, so nothing leaks in from the future.
+  - The model never sees the assessor's values.
+- **Ranges:** conformalized quantile regression. Calibrated on the most recent 20% of sales, then refit on all of them.
+- **Comparable sales:** within half a mile, ±20% house size, ±15 years, ±50% lot, and sold in the two years before the valuation date. If fewer than 5 are found, the search widens in steps and the page says so. Prices are adjusted with a citywide monthly index.
+- **Fairness statistics:** IAAO-style ratio study (median ratio, COD, PRD) on sales after the valuation date, trimming ratio outliers outside 1.5× the IQR.
 
-- The assessed value is above the **upper end of the model's 90% prediction interval** (the interval is calibrated on held-out sales, so it contains the true sale price about 90% of the time).
-- At least **five qualified comparable sales** (same area, similar size and age, sold in the assessment window) have a **median price below** the assessed value by a meaningful margin.
-- The parcel has complete data (no missing building characteristics, not recently split or combined, not under an existing petition).
+## Backtest
 
-Before launch, the policy is backtested on sales the model never saw: among homes it would have flagged, the share that actually sold **at or above** their assessed value must be very small (target: under 5%). Those results will be published on the site.
+Trained only on data before each year's valuation date, then scored on homes that sold afterwards (January–September):
 
-## First look at the data (Hennepin County, single-family homes)
-
-Using arm's-length sales ("warranty deed") compared with the county's current estimated market value:
-
-| Sale year | Sales | Median assessed ÷ sale price | COD* |
-|---|---|---|---|
-| 2023 | 7,384 | 0.98 | 8.9 |
-| 2024 | 7,840 | 0.96 | 10.0 |
-| 2025 | 8,561 | 0.92 | 11.0 |
-| 2026 (to Aug) | 5,969 | 0.90 | 12.8 |
-
-\*Coefficient of dispersion: how spread out the ratios are. The IAAO standard for single-family homes is 5–15.
-
-- **Most homes are assessed below recent sale prices**, typically by 8–10%. Over-assessment is the exception.
-- **Mild regressivity:** among 2025–26 sales, the cheapest tenth of homes had a median ratio of 0.98 versus 0.87 for the most expensive tenth. This is consistent with the [UChicago Property Tax Project's Hennepin report](https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html).
-- These are preliminary numbers that don't yet apply the state's full [sales ratio study criteria](https://www.revenue.state.mn.us/sales-ratio-studies) or time adjustments.
+| Assessment year | Sales tested | Model's typical error | City's typical error | In the 90% range | In the 50% range |
+|---|---|---|---|---|---|
+| 2025 | 1,998 | 11.1% | 13.6% | 86% | 45% |
+| 2026 | 1,729 | 10.7% | 12.0% | 89% | 47% |
 
 ## Data sources
 
-| Source | Used for | Terms |
-|---|---|---|
-| [Hennepin County GIS – County Parcels](https://gis-hennepin.opendata.arcgis.com/datasets/7975aabf6e1e42998a40a4b085ffefdf_1) (monthly) | Assessed values, last sale, build year, lot size, location | Free, no license required. Furnished "AS IS" with no warranty; not suitable for legal, engineering or surveying purposes. |
-| [Minneapolis Assessing Department Parcel Data](https://opendata.minneapolismn.gov/datasets/assessing-department-parcel-data-2025) (planned) | Square footage, bedrooms, bathrooms | City open data |
-| [MN Dept. of Revenue – Sales ratio studies](https://www.revenue.state.mn.us/sales-ratio-studies) and [criteria](https://www.revenue.state.mn.us/sites/default/files/2025-10/2026-sales-ratio-criteria-10-21-25.pdf) | Which sales count as arm's-length; study window | Public |
-| [UChicago Property Tax Project](https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html) | Cross-checking regressivity results | Cited only |
+| Source | Used for |
+|---|---|
+| [Minneapolis Assessing Department Parcel Data](https://opendata.minneapolismn.gov/datasets/assessing-department-parcel-data-2026) | Building characteristics, assessed values |
+| [Hennepin County GIS – County Parcels](https://gis-hennepin.opendata.arcgis.com/datasets/7975aabf6e1e42998a40a4b085ffefdf_1) | Latest sales, sale type, addresses (furnished "as is", no warranty) |
+| [MetroGIS Regional Parcel Dataset](https://metrogis.org/how-do-i-get/parcel-data/) (annual snapshots, 2021–2025) | Earlier sales |
+| [Minneapolis open data](https://opendata.minneapolismn.gov/): CCS Permits, CaseInspections, Active Rental Licenses | Renovation and condition signals |
+| [MN Dept. of Revenue – Sales ratio studies](https://www.revenue.state.mn.us/sales-ratio-studies) | Ratio-study methods |
+| [UChicago Property Tax Project](https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html) | Cross-check of the regressivity finding |
 
 Property records are public data under the [Minnesota Government Data Practices Act](https://mn.gov/admin/data-practices/data/rules/laws/) (Minn. Stat. ch. 13).
-
-## Appeal process (official sources)
-
-- Minneapolis: [Appeal your market value](https://www.minneapolismn.gov/resident-services/property-housing/property-values-taxes/market-value/appeal/). The City Assessor handles Minneapolis.
-- Other Hennepin cities: [Hennepin County property assessment](https://www.hennepin.us/residents/property/property-assessment)
-- Statewide: [MN Dept. of Revenue – Appealing property value and classification](https://www.revenue.state.mn.us/appealing-property-value-and-classification)
-
-## Related
-
-[Twin Cities Living Quality Map](https://github.com/KennedyJohnson/Twin-Cities_Living_Quality_Map). Its district-level home value model and time-based validation approach inform this project.
 
 ## Run it
 
 ```bash
-pip install pandas requests
-python pipeline/fetch_hennepin.py   # ~287k single-family parcels -> data/ (gitignored)
+pip install pandas requests scikit-learn
+cd pipeline
+python fetch_hennepin.py            # county parcels and latest sales
+python fetch_minneapolis.py 2025 2026
+python fetch_sale_history.py        # MetroGIS annual snapshots
+python fetch_permits.py
+python fetch_condition.py           # inspections and rental licenses
+python model.py                     # backtest -> data/backtest.json
+python build_site.py                # site/data/
+python -m http.server -d ../site 8000
 ```
+
+Raw downloads live in `data/` (gitignored). `site/` is deployed to GitHub Pages by `.github/workflows/pages.yml`.
+
+## Related
+
+[Twin Cities Living Quality Map](https://github.com/KennedyJohnson/Twin-Cities_Living_Quality_Map). Its district-level home value model and time-based validation informed this project.
 
 ## Disclaimer
 
-Estimates are statistical and can be wrong. This tool does not provide appraisals, legal advice, or tax advice, and is not affiliated with Hennepin County, the City of Minneapolis, or the State of Minnesota. Always review your official valuation notice and contact your assessor before filing an appeal.
+Estimates are statistical and can be wrong. This tool does not provide appraisals, legal advice or tax advice, and is not affiliated with Hennepin County, the City of Minneapolis or the State of Minnesota. Always review your official valuation notice and contact your assessor before filing an appeal.
