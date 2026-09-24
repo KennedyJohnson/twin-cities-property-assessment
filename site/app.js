@@ -114,6 +114,8 @@
     box.innerHTML = `<div class="card">${head}
       <p class="big">The city values this home at <b>${money(h.v)}</b> for ${year}.</p>
       <p class="big">Similar homes nearby sold for about <b>${round(h.cm)}</b>, usually between ${round(low)} and ${round(high)}.</p>
+      <p class="big">Our computer model estimates it would sell for about <b>${round(h.n)}</b> in ${nowMonth}, most likely between ${round(h.nlo50)} and ${round(h.nhi50)}.</p>
+      <p class="small muted">The model is typically within about 9% of the actual sale price, but it can't see inside the home, so condition and updates can move the price well outside that range.</p>
       ${h.tier > 0 ? `<p class="small muted">There weren't many sales of very similar homes right around this one, so we looked up to a mile away${h.tier > 1 ? " and back three years" : ""}. Treat this comparison as rougher than usual.</p>` : ""}
       <p class="verdict" style="border-color:${tone}">${lead}</p>
       ${extra}
@@ -125,7 +127,7 @@
         </table></div>
         <p class="small muted">*Estimated price as of January ${year}.</p>
         <p class="small muted">Our computer model, which never sees the city's value, expects this home would sell for about <b>${round(h.n)}</b> in ${nowMonth}.
-          Most likely between ${round(h.nlo50)} and ${round(h.nhi50)} (about half of homes like this sell in that range).
+          About half of homes like this sell between ${round(h.nlo50)} and ${round(h.nhi50)}.
           Condition can move it much further: 9 in 10 homes like this sell between ${round(h.nlo)} and ${round(h.nhi)}.
           As of January ${year}, the date the city values homes, its estimate is about ${round(h.e)}.</p>
       </details>
