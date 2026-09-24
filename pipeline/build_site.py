@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
+import build_neighborhoods
 import model as M
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -170,6 +171,7 @@ def main():
         "fairness_window": f"sales {after.SALE_DATE.min():%b %Y}–{after.SALE_DATE.max():%b %Y}",
     }
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
+    build_neighborhoods.main()
     print(json.dumps({k: summary[k] for k in ["parcels", "with_context", "training_sales", "fairness_window"]}))
     print(json.dumps(summary["fairness"]["overall"]), [d["median_ratio"] for d in summary["fairness"]["by_price_decile"]])
 

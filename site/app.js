@@ -8,8 +8,12 @@
   const zipCache = {};
 
 
-  const norm = (s) => s.toUpperCase().replace(/[.,#]/g, " ").replace(/\b(STREET)\b/g, "ST").replace(/\b(AVENUE)\b/g, "AVE")
+  const ABBR = { STREET: "ST", AVENUE: "AVE", ROAD: "RD", PLACE: "PL", TERRACE: "TER", BOULEVARD: "BLVD", DRIVE: "DR", LANE: "LN",
+    PARKWAY: "PKWY", NORTHEAST: "NE", NORTHWEST: "NW", SOUTHEAST: "SE", SOUTHWEST: "SW", NORTH: "N", SOUTH: "S", EAST: "E", WEST: "W" };
+  const norm = (s) => s.toUpperCase().replace(/[.,#]/g, " ").replace(/\b[A-Z]+\b/g, (w) => ABBR[w] || w)
     .replace(/\s+/g, " ").trim();
+  // The Twin Cities Living Quality Map links here with #<address>, and this page links back with ?q=.
+  const MAP_URL = "https://twin-cities-living-quality-map.vercel.app/";
 
   function el(tag, attrs, parent, textContent) {
     const n = document.createElementNS(NS, tag);
@@ -82,7 +86,8 @@
     const facts = [h.sqft && `${h.sqft.toLocaleString()} sq ft`, h.bd != null && `${h.bd} bed`, h.ba != null && `${h.ba} bath`,
       h.yb && `built ${h.yb}`].filter(Boolean).join(" · ");
     const head = `<div class="eyebrow">${esc(h.nb ? title(h.nb) : "")}</div><h2 style="margin:4px 0">${esc(title(h.a))}</h2>
-      <p class="muted small">${facts}</p>`;
+      <p class="muted small">${facts}</p>
+      <p class="small noprint"><a href="${MAP_URL}?q=${encodeURIComponent(title(h.a) + ", Minneapolis, MN")}" target="_blank" rel="noopener">How does this neighborhood score for safety, amenities and transit? See it on the Living Quality Map ↗</a></p>`;
     if (!h.ok) {
       box.innerHTML = `<div class="card">${head}
         <p class="big">The city values this home at <b>${money(h.v)}</b>.</p>
@@ -217,6 +222,16 @@
     $("why-no-verdict").textContent = "Why don't we just tell you \"your value is too high\"? We tried. About 1 in 5 homes we would have flagged still sold for more than the city's value, which is too often to be sure. So we show you the comparison and let you decide.";
 
     const hash = decodeURIComponent(location.hash.slice(1));
-    if (hash) { const wait = setInterval(() => { if (index) { clearInterval(wait); if (index[hash]) choose(hash); } }, 100); }
+    // A hash that isn't an exact key (e.g. "3217 48th Avenue South" from the map) is normalized; failing that it
+    // pre-fills the search box so the suggestions show.
+    if (hash) {
+      const wait = setInterval(() => {
+        if (!index) return;
+        clearInterval(wait);
+        const key = index[hash] ? hash : norm(hash);
+        if (index[key]) choose(key);
+        else { $("q").value = hash; $("q").dispatchEvent(new Event("input")); $("q").focus(); }
+      }, 100);
+    }
   });
 })();
