@@ -17,14 +17,14 @@ from pathlib import Path
 import pandas as pd
 
 from arcgis import fetch_layer
+from years import snapshot_years
 
 URL = "https://arcgis.metc.state.mn.us/data1/rest/services/parcels/Parcel_Points_{year}/FeatureServer/3"  # layer 3 = Hennepin
 OUT = Path(__file__).resolve().parent.parent / "data"
-YEARS = range(2021, 2026)
 
 if __name__ == "__main__":
     frames = []
-    for year in YEARS:
+    for year in snapshot_years():
         df = fetch_layer(URL.format(year=year), "CTU_NAME = 'Minneapolis' AND SALE_VALUE > 0",
                          ["OBJECTID", "COUNTY_PIN", "SALE_DATE", "SALE_VALUE"], page=2000)
         frames.append(df.assign(snapshot=year))

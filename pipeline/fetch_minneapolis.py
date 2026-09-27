@@ -6,12 +6,13 @@ One dataset per assessment year (values as of January 2; taxes payable the next 
 
 Privacy: the owner name field is never requested.
 
-Usage: python pipeline/fetch_minneapolis.py 2025 2026
+Usage: python pipeline/fetch_minneapolis.py [year ...]  (default: newest published year and the one before)
 """
 import sys
 from pathlib import Path
 
 from arcgis import fetch_layer
+from years import published_assessment_year
 
 URL = "https://services.arcgis.com/afSMGVsC7QlRK1kZ/arcgis/rest/services/Assessing_Department_Parcel_Data_{year}/FeatureServer/0"
 OUT = Path(__file__).resolve().parent.parent / "data"
@@ -25,7 +26,8 @@ FIELDS = [
 
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
-    for year in sys.argv[1:] or ["2026"]:
+    latest = published_assessment_year()
+    for year in sys.argv[1:] or [latest - 1, latest]:
         df = fetch_layer(URL.format(year=year), "PROPERTYTYPE = 'RESIDENTIAL 1 UNIT'", FIELDS)
         path = OUT / f"minneapolis_{year}.csv.gz"
         df.to_csv(path, index=False)

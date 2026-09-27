@@ -27,6 +27,8 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.neighbors import BallTree
 
+from years import local_assessment_year
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
@@ -442,8 +444,10 @@ if __name__ == "__main__":
     grid = [dict(model_margin=mm, comp_margin=cm, min_comps=mc)
             for mm in (0.0, 0.05, 0.10) for cm in (0.10, 0.15, 0.20) for mc in (5, 8)]
     report = {}
-    for year in (2025, 2026):
-        res, test = backtest_frame(year, "hennepin_202609.csv.gz")
+    latest = local_assessment_year()
+    county_file = sorted(DATA.glob("hennepin_*.csv.gz"))[-1].name
+    for year in (latest - 1, latest):
+        res, test = backtest_frame(year, county_file)
         report[year] = {"accuracy": accuracy(res, test), "grid": [{**g, **score(res, test, **g)} for g in grid]}
     print(json.dumps(report, indent=1))
     (DATA / "backtest.json").write_text(json.dumps(report, indent=1))

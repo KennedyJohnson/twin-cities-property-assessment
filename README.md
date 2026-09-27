@@ -65,7 +65,7 @@ Property records are public data under the [Minnesota Government Data Practices 
 pip install pandas requests scikit-learn
 cd pipeline
 python fetch_hennepin.py            # county parcels and latest sales
-python fetch_minneapolis.py 2025 2026
+python fetch_minneapolis.py            # newest published year + prior (auto-detected)
 python fetch_sale_history.py        # MetroGIS annual snapshots
 python fetch_permits.py
 python fetch_condition.py           # inspections and rental licenses

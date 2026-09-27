@@ -177,6 +177,13 @@
   fetch("data/summary.json").then((r) => r.json()).then((s) => {
     summary = s;
     $("year").textContent = s.assessment_year;
+    // Data refreshes monthly; warn if the refresh job has stopped.
+    if ((Date.now() - new Date(s.built)) / 86400000 > 60) {
+      const b = document.createElement("div");
+      b.style.cssText = "background:#fff4e5;color:#663c00;border-bottom:1px solid #f0c36d;padding:6px 12px;font-size:13px;text-align:center";
+      b.textContent = `Heads up: sales data was last updated ${s.built} and may be out of date.`;
+      document.body.prepend(b);
+    }
     const f = s.fairness, d = f.by_price_decile;
     const typical = Math.round(f.overall.median_ratio * 100);
     $("fair-sub").innerHTML = `For a typical Minneapolis house, the city's value was about <b>${typical}% of what it sold for</b>, a bit below the sale price. But that isn't true for every home:`;

@@ -20,10 +20,11 @@ from sklearn.neighbors import BallTree
 
 import build_neighborhoods
 import model as M
+from years import local_assessment_year
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site" / "data"
-ASMT_YEAR = 2026
+ASMT_YEAR = local_assessment_year()
 VALUE_DATE = f"{ASMT_YEAR}-01-01"
 MAX_COMPS = 8
 MIN_GROUP = 30  # minimum sales to report a group's fairness statistics
