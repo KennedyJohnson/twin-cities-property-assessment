@@ -73,3 +73,15 @@ jobs:
               body: `Site data is going stale.\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               labels: ['stale-data'],
             });
+
+  # GitHub disables cron workflows after 60 days without repo activity; re-enabling on each
+  # scheduled run resets that timer even when a run has nothing to commit.
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/refresh.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
