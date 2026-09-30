@@ -226,6 +226,14 @@
       row("Our model was typically off by*", (a) => pct(a.model_median_abs_pct_error)) +
       row("The city's value was typically off by", (a) => pct(a.assessor_median_abs_pct_error));
     $("bt").insertAdjacentHTML("afterend", `<p class="small muted">*Our model estimates the price for the month each home sold, using only data from before January. The city's value is set for January 2 and isn't adjusted for later price changes, so part of its gap is timing.</p>`);
+    if (s.live?.length) {
+      const live = s.live.slice(-12).reverse();
+      $("bt").closest(".tablewrap").insertAdjacentHTML("afterend", `<h4>Checking our published estimates as homes sell</h4>` +
+        `<p class="small muted">Each month we save the estimates and ranges shown on this page, then check them against homes that sold later that month. The model never saw those sales. A well-calibrated 90% range should contain about 90% of prices, and the 50% range about half.</p>` +
+        `<div class="tablewrap"><table><tr><th>Month</th><th>Homes sold</th><th>Typically off by</th><th>In 90% range</th><th>In 50% range</th></tr>` +
+        live.map((m) => `<tr><td>${m.month}</td><td>${m.sales}</td><td>${pct(m.median_abs_pct_error)}</td><td>${pct(m.range90_coverage)}</td><td>${pct(m.range50_coverage)}</td></tr>`).join("") +
+        `</table></div>`);
+    }
     $("why-no-verdict").textContent = "Why don't we just tell you \"your value is too high\"? We tried. About 1 in 5 homes we would have flagged still sold for more than the city's value, which is too often to be sure. So we show you the comparison and let you decide.";
 
     const hash = decodeURIComponent(location.hash.slice(1));

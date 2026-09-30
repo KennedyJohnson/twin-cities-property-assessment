@@ -43,6 +43,10 @@ Trained only on data before each year's valuation date, then scored on homes tha
 
 2025 still runs low because prices rose faster that year than the trend projected; forecasting from past sales alone can't fully catch a turn in the market.
 
+## Live check
+
+The backtest scores past years. To keep checking the estimates people actually see, each monthly build saves what it published for that month to `tracking/estimates_YYYY-MM.csv.gz`, which holds parcel ID and numbers only. Later builds join those snapshots to qualified sales that closed in the same month after the snapshot was built, so the model never saw them. They then report the typical error and how often the 90% and 50% ranges contained the sale price ([`pipeline/live_coverage.py`](pipeline/live_coverage.py), `summary.json` → `live`, shown on the site). County sale records lag by a month or two, so each month's row fills in over the following builds.
+
 ## Data sources
 
 | Source | Used for |
