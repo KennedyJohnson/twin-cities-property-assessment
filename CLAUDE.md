@@ -9,6 +9,7 @@ Static site (`site/`, GitHub Pages via `pages.yml`) comparing a Minneapolis home
 4. `fetch_permits.py`, `fetch_condition.py` (inspections, rental licenses)
 5. `model.py` → `data/backtest.json` (backtests latest-1 and latest assessment years)
 6. `build_site.py` → `site/data/` (`summary.json` has `assessment_year`, `built`)
+- `live_coverage.py` - called by `build_site.py`: snapshots published estimates to `tracking/` (committed by the workflow) and scores past snapshots against later sales → `summary.live`.
 - `years.py` - discovers published assessment year / snapshot years from ArcGIS (no hardcoded years). `arcgis.py` - paged FeatureServer fetch. `build_neighborhoods.py` - neighborhood outputs.
 - Model: sklearn HistGradientBoosting on log price, hedonic time index, 5-seed ensemble, conformalized quantile ranges. See README "Method" before changing modeling.
 

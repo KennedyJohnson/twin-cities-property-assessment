@@ -19,6 +19,7 @@ import pandas as pd
 from sklearn.neighbors import BallTree
 
 import build_neighborhoods
+import live_coverage
 import model as M
 from years import local_assessment_year
 
@@ -127,12 +128,13 @@ def main():
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "zip").mkdir(exist_ok=True)
-    by_zip, index = {}, {}
+    by_zip, index, oks = {}, {}, []
     for i, r in enumerate(res.itertuples()):
         addr = r.county_addr if isinstance(r.county_addr, str) else " ".join(str(r.ADDRESSFORMATTED).split())
         zc = str(int(r.ZIP1)) if pd.notna(r.ZIP1) else "unknown"
         c = w.iloc[comps[i]] if len(comps[i]) else w.iloc[[]]
         enough = bool(complete.iloc[i] and tiers[i] >= 0)
+        oks.append(enough)
         entry = {
             "a": addr, "nb": r.NEIGHBORHOOD, "v": int(r.TOTALVALUE),
             "sqft": int(r.ABOVEGROUNDAREA) if pd.notna(r.ABOVEGROUNDAREA) else None,
@@ -160,6 +162,9 @@ def main():
         (OUT / "zip" / f"{zc}.json").write_text(json.dumps(entries, separators=(",", ":")), encoding="utf-8")
     (OUT / "addresses.json").write_text(json.dumps(index, separators=(",", ":")), encoding="utf-8")
 
+    # Save what was published this month so later builds can check it against sales that close afterwards.
+    live_coverage.snapshot(res, oks, now, pd.Timestamp.today().normalize())
+
     backtest = json.loads((M.DATA / "backtest.json").read_text())
     summary = {
         "assessment_year": ASMT_YEAR, "value_date": VALUE_DATE, "built": pd.Timestamp.today().strftime("%Y-%m-%d"),
@@ -169,6 +174,7 @@ def main():
         "flag_backtest": {y: next(g for g in v["grid"] if g["model_margin"] == 0 and g["comp_margin"] == 0.1 and g["min_comps"] == 5)
                           for y, v in backtest.items()},
         "fairness": fairness(res, after),
+        "live": live_coverage.report(sales),
         "fairness_window": f"sales {after.SALE_DATE.min():%b %Y}–{after.SALE_DATE.max():%b %Y}",
     }
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
