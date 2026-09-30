@@ -26,7 +26,13 @@
   const title = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\b(Ne|Se|Nw|Sw)\b/g, (m) => m.toUpperCase());
 
   // ---- search ----
-  fetch("data/addresses.json").then((r) => r.json()).then((d) => { index = d; keys = Object.keys(d); });
+  const getJSON = (url) => fetch(url).then((r) => { if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r.json(); });
+  let indexFailed = false;
+  getJSON("data/addresses.json").then((d) => { index = d; keys = Object.keys(d); }).catch((err) => {
+    console.error(err);
+    indexFailed = true;
+    $("q").placeholder = "Address search couldn't load. Try refreshing the page.";
+  });
   let active = -1, matches = [];
   $("q").addEventListener("input", () => {
     const q = norm($("q").value);
@@ -62,7 +68,13 @@
     $("suggest").hidden = true;
     $("q").value = title(addr);
     const zc = index[addr];
-    if (!zipCache[zc]) zipCache[zc] = await fetch(`data/zip/${zc}.json`).then((r) => r.json());
+    try {
+      if (!zipCache[zc]) zipCache[zc] = await getJSON(`data/zip/${zc}.json`);
+    } catch (err) {
+      console.error(err);
+      $("result").innerHTML = `<div class="card"><p>Couldn't load this home's details. Check your connection and try again.</p></div>`;
+      return;
+    }
     render(zipCache[zc][addr], zc);
     history.replaceState(null, "", "#" + encodeURIComponent(addr));
   }
@@ -241,6 +253,7 @@
     // pre-fills the search box so the suggestions show.
     if (hash) {
       const wait = setInterval(() => {
+        if (indexFailed) clearInterval(wait);
         if (!index) return;
         clearInterval(wait);
         const key = index[hash] ? hash : norm(hash);
