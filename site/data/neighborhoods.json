@@ -1,214 +1,214 @@
 {
- "built": "2026-09-23",
+ "built": "2026-09-30",
  "assessment_year": 2026,
  "neighborhoods": {
   "ARMATAGE": {
    "homes": 1863,
    "compared": 1858,
    "median_ratio": 0.959,
-   "share_high": 0.027,
-   "share_low": 0.07
+   "share_high": 0.026,
+   "share_low": 0.074
   },
   "AUDUBON PARK": {
    "homes": 1660,
    "compared": 1653,
    "median_ratio": 0.932,
    "share_high": 0.023,
-   "share_low": 0.121
+   "share_low": 0.124
   },
   "BANCROFT": {
    "homes": 1023,
    "compared": 1023,
-   "median_ratio": 0.966,
-   "share_high": 0.056,
-   "share_low": 0.16
+   "median_ratio": 0.965,
+   "share_high": 0.051,
+   "share_low": 0.153
   },
   "BELTRAMI": {
    "homes": 210,
    "compared": 193,
-   "median_ratio": 0.913,
-   "share_high": 0.01,
-   "share_low": 0.269
+   "median_ratio": 0.923,
+   "share_high": 0.016,
+   "share_low": 0.28
   },
   "BOTTINEAU": {
    "homes": 202,
    "compared": 202,
-   "median_ratio": 0.964,
-   "share_high": 0.02,
-   "share_low": 0.094
+   "median_ratio": 0.968,
+   "share_high": 0.025,
+   "share_low": 0.089
   },
   "BRYANT": {
    "homes": 750,
    "compared": 748,
-   "median_ratio": 0.949,
+   "median_ratio": 0.946,
    "share_high": 0.043,
    "share_low": 0.164
   },
   "BRYN MAWR": {
    "homes": 1063,
    "compared": 1051,
-   "median_ratio": 0.961,
-   "share_high": 0.092,
+   "median_ratio": 0.956,
+   "share_high": 0.09,
    "share_low": 0.029
   },
   "CEDAR RIVERSIDE": {
    "homes": 29,
    "compared": 26,
-   "median_ratio": 0.893,
+   "median_ratio": 0.887,
    "share_high": 0.0,
    "share_low": 0.308
   },
   "CEDAR-ISLES-DEAN": {
    "homes": 417,
    "compared": 377,
-   "median_ratio": 1.034,
-   "share_high": 0.18,
+   "median_ratio": 1.038,
+   "share_high": 0.191,
    "share_low": 0.095
   },
   "CENTRAL": {
    "homes": 1055,
    "compared": 1050,
-   "median_ratio": 0.917,
-   "share_high": 0.052,
-   "share_low": 0.262
+   "median_ratio": 0.918,
+   "share_high": 0.051,
+   "share_low": 0.272
   },
   "CLEVELAND": {
    "homes": 1151,
    "compared": 1148,
-   "median_ratio": 0.922,
-   "share_high": 0.064,
-   "share_low": 0.155
+   "median_ratio": 0.924,
+   "share_high": 0.065,
+   "share_low": 0.148
   },
   "COLUMBIA PARK": {
    "homes": 569,
    "compared": 550,
-   "median_ratio": 0.981,
+   "median_ratio": 0.982,
    "share_high": 0.047,
-   "share_low": 0.109
+   "share_low": 0.105
   },
   "COMO": {
    "homes": 909,
    "compared": 874,
-   "median_ratio": 0.979,
-   "share_high": 0.077,
-   "share_low": 0.138
+   "median_ratio": 0.983,
+   "share_high": 0.066,
+   "share_low": 0.142
   },
   "COOPER": {
    "homes": 1249,
    "compared": 1230,
-   "median_ratio": 0.954,
-   "share_high": 0.029,
-   "share_low": 0.07
+   "median_ratio": 0.955,
+   "share_high": 0.03,
+   "share_low": 0.072
   },
   "CORCORAN": {
    "homes": 825,
    "compared": 819,
-   "median_ratio": 0.944,
-   "share_high": 0.027,
-   "share_low": 0.193
+   "median_ratio": 0.946,
+   "share_high": 0.031,
+   "share_low": 0.206
   },
   "DIAMOND LAKE": {
    "homes": 2004,
    "compared": 1990,
-   "median_ratio": 0.941,
+   "median_ratio": 0.94,
    "share_high": 0.032,
-   "share_low": 0.132
+   "share_low": 0.138
   },
   "EAST BDE MAKA SKA": {
    "homes": 338,
    "compared": 330,
    "median_ratio": 0.922,
-   "share_high": 0.082,
-   "share_low": 0.055
+   "share_high": 0.094,
+   "share_low": 0.061
   },
   "EAST HARRIET": {
    "homes": 756,
    "compared": 696,
-   "median_ratio": 0.977,
-   "share_high": 0.08,
-   "share_low": 0.026
+   "median_ratio": 0.979,
+   "share_high": 0.079,
+   "share_low": 0.024
   },
   "EAST ISLES": {
    "homes": 312,
    "compared": 299,
-   "median_ratio": 0.967,
-   "share_high": 0.161,
-   "share_low": 0.054
+   "median_ratio": 0.963,
+   "share_high": 0.174,
+   "share_low": 0.06
   },
   "EAST PHILLIPS": {
    "homes": 339,
    "compared": 328,
    "median_ratio": 0.956,
    "share_high": 0.107,
-   "share_low": 0.271
+   "share_low": 0.265
   },
   "ERICSSON": {
    "homes": 1196,
    "compared": 1190,
    "median_ratio": 0.931,
    "share_high": 0.024,
-   "share_low": 0.109
+   "share_low": 0.111
   },
   "FIELD": {
    "homes": 938,
    "compared": 924,
-   "median_ratio": 0.967,
-   "share_high": 0.027,
-   "share_low": 0.116
+   "median_ratio": 0.977,
+   "share_high": 0.025,
+   "share_low": 0.12
   },
   "FOLWELL": {
    "homes": 1606,
    "compared": 1604,
-   "median_ratio": 0.925,
-   "share_high": 0.084,
+   "median_ratio": 0.923,
+   "share_high": 0.089,
    "share_low": 0.211
   },
   "FULTON": {
    "homes": 2274,
    "compared": 2233,
-   "median_ratio": 0.971,
-   "share_high": 0.098,
+   "median_ratio": 0.973,
+   "share_high": 0.099,
    "share_low": 0.037
   },
   "HALE": {
    "homes": 1197,
    "compared": 1192,
-   "median_ratio": 0.948,
-   "share_high": 0.055,
-   "share_low": 0.069
+   "median_ratio": 0.946,
+   "share_high": 0.054,
+   "share_low": 0.072
   },
   "HARRISON": {
    "homes": 389,
    "compared": 387,
-   "median_ratio": 0.911,
-   "share_high": 0.026,
-   "share_low": 0.282
+   "median_ratio": 0.909,
+   "share_high": 0.023,
+   "share_low": 0.261
   },
   "HAWTHORNE": {
    "homes": 725,
    "compared": 720,
-   "median_ratio": 0.951,
-   "share_high": 0.124,
-   "share_low": 0.286
+   "median_ratio": 0.952,
+   "share_high": 0.121,
+   "share_low": 0.278
   },
   "HIAWATHA": {
    "homes": 1648,
    "compared": 1636,
-   "median_ratio": 0.96,
-   "share_high": 0.078,
-   "share_low": 0.103
+   "median_ratio": 0.962,
+   "share_high": 0.075,
+   "share_low": 0.102
   },
   "HOLLAND": {
    "homes": 751,
    "compared": 747,
    "median_ratio": 0.956,
-   "share_high": 0.08,
-   "share_low": 0.149
+   "share_high": 0.075,
+   "share_low": 0.15
   },
   "HOWE": {
    "homes": 2408,
    "compared": 2398,
-   "median_ratio": 0.945,
+   "median_ratio": 0.947,
    "share_high": 0.036,
    "share_low": 0.116
   },
@@ -216,337 +216,337 @@
    "homes": 1788,
    "compared": 1781,
    "median_ratio": 0.923,
-   "share_high": 0.105,
-   "share_low": 0.248
+   "share_high": 0.101,
+   "share_low": 0.249
   },
   "KEEWAYDIN": {
    "homes": 1252,
    "compared": 1245,
-   "median_ratio": 0.899,
+   "median_ratio": 0.898,
    "share_high": 0.027,
-   "share_low": 0.142
+   "share_low": 0.145
   },
   "KENNY": {
    "homes": 1517,
    "compared": 1503,
-   "median_ratio": 0.936,
-   "share_high": 0.029,
-   "share_low": 0.09
+   "median_ratio": 0.935,
+   "share_high": 0.027,
+   "share_low": 0.086
   },
   "KENWOOD": {
    "homes": 447,
    "compared": 433,
-   "median_ratio": 0.987,
-   "share_high": 0.215,
-   "share_low": 0.074
+   "median_ratio": 0.991,
+   "share_high": 0.219,
+   "share_low": 0.079
   },
   "KING FIELD": {
    "homes": 2050,
    "compared": 2039,
-   "median_ratio": 0.93,
-   "share_high": 0.035,
-   "share_low": 0.134
+   "median_ratio": 0.929,
+   "share_high": 0.033,
+   "share_low": 0.132
   },
   "LIND-BOHANON": {
    "homes": 1612,
    "compared": 1600,
-   "median_ratio": 0.916,
-   "share_high": 0.029,
-   "share_low": 0.253
+   "median_ratio": 0.914,
+   "share_high": 0.033,
+   "share_low": 0.262
   },
   "LINDEN HILLS": {
    "homes": 2235,
    "compared": 2186,
-   "median_ratio": 0.973,
-   "share_high": 0.134,
+   "median_ratio": 0.974,
+   "share_high": 0.138,
    "share_low": 0.072
   },
   "LOGAN PARK": {
    "homes": 204,
    "compared": 201,
    "median_ratio": 0.976,
-   "share_high": 0.109,
-   "share_low": 0.114
+   "share_high": 0.124,
+   "share_low": 0.109
   },
   "LONGFELLOW": {
    "homes": 1164,
    "compared": 1154,
-   "median_ratio": 0.89,
+   "median_ratio": 0.891,
    "share_high": 0.006,
-   "share_low": 0.208
+   "share_low": 0.217
   },
   "LOWRY HILL": {
    "homes": 501,
    "compared": 478,
    "median_ratio": 0.936,
-   "share_high": 0.075,
-   "share_low": 0.056
+   "share_high": 0.073,
+   "share_low": 0.059
   },
   "LOWRY HILL EAST": {
    "homes": 269,
    "compared": 264,
-   "median_ratio": 0.885,
+   "median_ratio": 0.887,
    "share_high": 0.019,
-   "share_low": 0.182
+   "share_low": 0.174
   },
   "LYNDALE": {
    "homes": 543,
    "compared": 541,
-   "median_ratio": 0.895,
-   "share_high": 0.007,
-   "share_low": 0.259
+   "median_ratio": 0.893,
+   "share_high": 0.009,
+   "share_low": 0.264
   },
   "LYNNHURST": {
    "homes": 1982,
    "compared": 1957,
-   "median_ratio": 1.034,
-   "share_high": 0.206,
+   "median_ratio": 1.03,
+   "share_high": 0.207,
    "share_low": 0.028
   },
   "MARCY-HOLMES": {
    "homes": 209,
    "compared": 176,
-   "median_ratio": 0.932,
-   "share_high": 0.085,
-   "share_low": 0.108
+   "median_ratio": 0.937,
+   "share_high": 0.08,
+   "share_low": 0.131
   },
   "MARSHALL TERRACE": {
    "homes": 326,
    "compared": 323,
-   "median_ratio": 0.952,
-   "share_high": 0.04,
-   "share_low": 0.099
+   "median_ratio": 0.949,
+   "share_high": 0.037,
+   "share_low": 0.096
   },
   "MCKINLEY": {
    "homes": 908,
    "compared": 904,
-   "median_ratio": 0.921,
-   "share_high": 0.081,
-   "share_low": 0.243
+   "median_ratio": 0.919,
+   "share_high": 0.075,
+   "share_low": 0.235
   },
   "MIDTOWN PHILLIPS": {
    "homes": 401,
    "compared": 392,
-   "median_ratio": 0.977,
-   "share_high": 0.13,
+   "median_ratio": 0.97,
+   "share_high": 0.143,
    "share_low": 0.161
   },
   "MINNEHAHA": {
    "homes": 1416,
    "compared": 1402,
-   "median_ratio": 0.921,
-   "share_high": 0.034,
-   "share_low": 0.133
+   "median_ratio": 0.918,
+   "share_high": 0.036,
+   "share_low": 0.131
   },
   "MORRIS PARK": {
    "homes": 1242,
    "compared": 1236,
-   "median_ratio": 0.965,
+   "median_ratio": 0.964,
    "share_high": 0.023,
-   "share_low": 0.12
+   "share_low": 0.125
   },
   "NEAR NORTH": {
    "homes": 746,
    "compared": 740,
-   "median_ratio": 0.922,
-   "share_high": 0.081,
-   "share_low": 0.247
+   "median_ratio": 0.928,
+   "share_high": 0.078,
+   "share_low": 0.249
   },
   "NICOLLET ISLAND - EAST BANK": {
    "homes": 12,
    "compared": 11,
-   "median_ratio": 2.182,
+   "median_ratio": 2.221,
    "share_high": 0.818,
    "share_low": 0.0
   },
   "NORTHEAST PARK": {
    "homes": 156,
    "compared": 153,
-   "median_ratio": 0.884,
+   "median_ratio": 0.882,
    "share_high": 0.033,
-   "share_low": 0.333
+   "share_low": 0.314
   },
   "NORTHROP": {
    "homes": 1594,
    "compared": 1581,
    "median_ratio": 0.92,
    "share_high": 0.026,
-   "share_low": 0.091
+   "share_low": 0.087
   },
   "PAGE": {
    "homes": 637,
    "compared": 634,
-   "median_ratio": 0.964,
+   "median_ratio": 0.961,
    "share_high": 0.041,
-   "share_low": 0.077
+   "share_low": 0.076
   },
   "PHILLIPS WEST": {
    "homes": 106,
    "compared": 101,
-   "median_ratio": 0.769,
+   "median_ratio": 0.767,
    "share_high": 0.0,
-   "share_low": 0.475
+   "share_low": 0.485
   },
   "POWDERHORN PARK": {
    "homes": 1254,
    "compared": 1250,
-   "median_ratio": 0.917,
+   "median_ratio": 0.916,
    "share_high": 0.033,
-   "share_low": 0.242
+   "share_low": 0.248
   },
   "PROSPECT PARK - EAST RIVER ROAD": {
    "homes": 603,
    "compared": 581,
-   "median_ratio": 0.935,
-   "share_high": 0.093,
-   "share_low": 0.122
+   "median_ratio": 0.938,
+   "share_high": 0.091,
+   "share_low": 0.12
   },
   "REGINA": {
    "homes": 736,
    "compared": 734,
-   "median_ratio": 0.961,
-   "share_high": 0.022,
-   "share_low": 0.166
+   "median_ratio": 0.963,
+   "share_high": 0.02,
+   "share_low": 0.154
   },
   "SEWARD": {
    "homes": 975,
    "compared": 940,
-   "median_ratio": 0.899,
-   "share_high": 0.046,
-   "share_low": 0.139
+   "median_ratio": 0.895,
+   "share_high": 0.047,
+   "share_low": 0.138
   },
   "SHERIDAN": {
    "homes": 366,
    "compared": 359,
-   "median_ratio": 0.999,
-   "share_high": 0.084,
+   "median_ratio": 0.996,
+   "share_high": 0.081,
    "share_low": 0.061
   },
   "SHINGLE CREEK": {
    "homes": 1063,
    "compared": 1061,
-   "median_ratio": 0.948,
-   "share_high": 0.037,
-   "share_low": 0.183
+   "median_ratio": 0.949,
+   "share_high": 0.035,
+   "share_low": 0.179
   },
   "SOUTH UPTOWN": {
    "homes": 536,
    "compared": 531,
-   "median_ratio": 0.937,
+   "median_ratio": 0.938,
    "share_high": 0.015,
-   "share_low": 0.094
+   "share_low": 0.098
   },
   "ST ANTHONY EAST": {
    "homes": 246,
    "compared": 241,
-   "median_ratio": 0.928,
-   "share_high": 0.041,
+   "median_ratio": 0.927,
+   "share_high": 0.021,
    "share_low": 0.116
   },
   "ST ANTHONY WEST": {
    "homes": 237,
    "compared": 226,
-   "median_ratio": 0.936,
-   "share_high": 0.146,
+   "median_ratio": 0.933,
+   "share_high": 0.137,
    "share_low": 0.04
   },
   "STANDISH": {
    "homes": 2279,
    "compared": 2265,
-   "median_ratio": 0.95,
-   "share_high": 0.02,
+   "median_ratio": 0.948,
+   "share_high": 0.019,
    "share_low": 0.119
   },
   "STEVEN'S SQUARE - LORING HEIGHTS": {
    "homes": 24,
    "compared": 17,
-   "median_ratio": 1.133,
+   "median_ratio": 1.123,
    "share_high": 0.0,
-   "share_low": 0.059
+   "share_low": 0.118
   },
   "SUMNER-GLENWOOD": {
    "homes": 24,
    "compared": 23,
-   "median_ratio": 1.005,
-   "share_high": 0.087,
+   "median_ratio": 1.011,
+   "share_high": 0.0,
    "share_low": 0.0
   },
   "TANGLETOWN": {
    "homes": 1264,
    "compared": 1255,
-   "median_ratio": 1.002,
-   "share_high": 0.109,
-   "share_low": 0.077
+   "median_ratio": 1.004,
+   "share_high": 0.122,
+   "share_low": 0.078
   },
   "VENTURA VILLAGE": {
    "homes": 156,
    "compared": 146,
-   "median_ratio": 0.95,
-   "share_high": 0.041,
-   "share_low": 0.301
+   "median_ratio": 0.946,
+   "share_high": 0.048,
+   "share_low": 0.288
   },
   "VICTORY": {
    "homes": 1849,
    "compared": 1842,
-   "median_ratio": 0.924,
-   "share_high": 0.036,
-   "share_low": 0.14
+   "median_ratio": 0.922,
+   "share_high": 0.034,
+   "share_low": 0.143
   },
   "WAITE PARK": {
    "homes": 2252,
    "compared": 2240,
-   "median_ratio": 0.942,
-   "share_high": 0.021,
-   "share_low": 0.137
+   "median_ratio": 0.941,
+   "share_high": 0.02,
+   "share_low": 0.139
   },
   "WEBBER-CAMDEN": {
    "homes": 1433,
    "compared": 1425,
-   "median_ratio": 0.936,
-   "share_high": 0.079,
-   "share_low": 0.216
+   "median_ratio": 0.937,
+   "share_high": 0.073,
+   "share_low": 0.218
   },
   "WENONAH": {
    "homes": 1344,
    "compared": 1335,
-   "median_ratio": 0.941,
+   "median_ratio": 0.94,
    "share_high": 0.021,
-   "share_low": 0.142
+   "share_low": 0.15
   },
   "WEST MAKA SKA": {
    "homes": 42,
    "compared": 33,
-   "median_ratio": 1.28,
+   "median_ratio": 1.283,
    "share_high": 0.485,
    "share_low": 0.0
   },
   "WHITTIER": {
    "homes": 337,
    "compared": 325,
-   "median_ratio": 0.914,
-   "share_high": 0.025,
-   "share_low": 0.206
+   "median_ratio": 0.915,
+   "share_high": 0.022,
+   "share_low": 0.203
   },
   "WILLARD-HAY": {
    "homes": 2215,
    "compared": 2207,
    "median_ratio": 0.97,
-   "share_high": 0.12,
-   "share_low": 0.17
+   "share_high": 0.117,
+   "share_low": 0.167
   },
   "WINDOM": {
    "homes": 1031,
    "compared": 1021,
-   "median_ratio": 0.966,
-   "share_high": 0.015,
-   "share_low": 0.101
+   "median_ratio": 0.967,
+   "share_high": 0.014,
+   "share_low": 0.108
   },
   "WINDOM PARK": {
    "homes": 1157,
    "compared": 1148,
-   "median_ratio": 0.935,
-   "share_high": 0.029,
-   "share_low": 0.13
+   "median_ratio": 0.937,
+   "share_high": 0.032,
+   "share_low": 0.132
   }
  }
 }
