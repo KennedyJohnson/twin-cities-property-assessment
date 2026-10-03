@@ -1,31 +1,31 @@
 {
  "assessment_year": 2026,
  "value_date": "2026-01-01",
- "built": "2026-09-30",
+ "built": "2026-10-03",
  "parcels": 74614,
  "with_context": 73728,
  "training_sales": 13714,
- "estimate_month": "2026-09",
+ "estimate_month": "2026-10",
  "backtest": {
   "2025": {
    "train_sales": 15248,
    "test_sales": 1998,
-   "model_median_abs_pct_error": 0.0926719347150553,
-   "model_median_ratio": 0.9552479774614726,
+   "model_median_abs_pct_error": 0.09525975583762764,
+   "model_median_ratio": 0.9608987204500614,
    "assessor_median_ratio": 0.8955420654114281,
    "assessor_median_abs_pct_error": 0.13606553147574818,
-   "interval_coverage": 0.8718718718718719,
-   "likely_range_coverage": 0.4964964964964965
+   "interval_coverage": 0.8768768768768769,
+   "likely_range_coverage": 0.497997997997998
   },
   "2026": {
    "train_sales": 14639,
    "test_sales": 1729,
-   "model_median_abs_pct_error": 0.09352097038181884,
-   "model_median_ratio": 1.0048355158063942,
+   "model_median_abs_pct_error": 0.0955629125377655,
+   "model_median_ratio": 1.0014154803435416,
    "assessor_median_ratio": 0.9257142857142857,
    "assessor_median_abs_pct_error": 0.12,
-   "interval_coverage": 0.9051474840948525,
-   "likely_range_coverage": 0.5199537304800462
+   "interval_coverage": 0.902834008097166,
+   "likely_range_coverage": 0.5170618854829381
   }
  },
  "flag_backtest": {
@@ -33,18 +33,18 @@
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.012068688384054865,
+   "flagged_share_all_parcels": 0.011318581225889413,
    "not_enough_data_share": 0.2009885340762966,
-   "flagged_test_sales": 15,
-   "flagged_sold_at_or_above_assessed": 0.2,
+   "flagged_test_sales": 13,
+   "flagged_sold_at_or_above_assessed": 0.23076923076923078,
    "flagged_median_sale_to_assessed": 0.8955962394854032,
-   "in_line_sold_below_90pct_of_assessed": 0.09832272990167727
+   "in_line_sold_below_90pct_of_assessed": 0.09878682842287695
   },
   "2026": {
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.0068217760741951915,
+   "flagged_share_all_parcels": 0.00676816683196183,
    "not_enough_data_share": 0.20040474977886188,
    "flagged_test_sales": 2,
    "flagged_sold_at_or_above_assessed": 0.0,
