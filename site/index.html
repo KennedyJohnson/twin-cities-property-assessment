@@ -1,37 +1,24 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Minneapolis Assessment Check</title>
 <meta name="description" content="Free context on a Minneapolis home's assessed value: how it compares with similar nearby sales, built on public data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
 <style>
 :root {
-  color-scheme: light;
-  --bg: #f6f5f2; --card: #fcfcfb; --border: #e3e1dc; --grid: #ecebe7;
-  --ink: #0b0b0b; --ink2: #52514e; --muted: #7c7a75;
-  --accent: #2a78d6; --accent-soft: #cde2fb; --warm: #eb6834; --band: #b7d3f6;
-}
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --bg: #121211; --card: #1a1a19; --border: #2e2e2b; --grid: #262624;
-    --ink: #fff; --ink2: #c3c2b7; --muted: #8f8e86;
-    --accent: #3987e5; --accent-soft: #104281; --warm: #d95926; --band: #1c5cab;
-  }
-}
-:root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #121211; --card: #1a1a19; --border: #2e2e2b; --grid: #262624;
   --ink: #fff; --ink2: #c3c2b7; --muted: #8f8e86;
-  --accent: #3987e5; --accent-soft: #104281; --warm: #d95926; --band: #1c5cab;
+  --accent: #8ab4f8; --accent-soft: #1c2a3d; --on-accent: #0b1020; --warm: #d95926; --band: #1c5cab;
+  --font-title: Fraunces, Georgia, serif;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Inter, system-ui, sans-serif; }
 main { max-width: 880px; margin: 0 auto; padding: 40px 16px 80px; }
-h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.02em; }
+h1 { font-family: var(--font-title); font-weight: 600; font-size: clamp(30px, 5vw, 42px); line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.02em; }
 h2 { font-size: 22px; margin: 48px 0 8px; }
 h3 { font-size: 15px; margin: 0 0 4px; }
 .eyebrow { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
@@ -63,10 +50,11 @@ svg .lbl { fill: var(--ink2); font-weight: 500; }
 ul.list { padding-left: 20px; color: var(--ink2); } ul.list li { margin: 4px 0; }
 a { color: var(--accent); }
 .btn { display: inline-block; font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer; text-decoration: none; }
-.theme-btn { position: fixed; top: 12px; right: 12px; border-radius: 20px; font-size: 13px; padding: 6px 12px; }
+.examples { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.examples .btn { font-size: 13px; padding: 4px 10px; border-radius: 20px; }
 .note { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink2); }
 footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: 13px; }
-@media print { .search, .theme-btn, #about, #fairness, #privacy, .noprint { display: none !important; } body { background: #fff; } .card { border: 0; } }
+@media print { .search, #about, #fairness, #privacy, .noprint { display: none !important; } body { background: #fff; } .card { border: 0; } }
 </style>
 </head>
 <body>
@@ -79,7 +67,9 @@ footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16p
     <input id="q" type="search" autocomplete="off" placeholder="Type your address, e.g. 2959 Lincoln St" aria-label="Address">
     <div class="suggest" id="suggest" hidden></div>
   </div>
-  <p class="hint">Houses in Minneapolis only (not condos or duplexes yet). What you type stays in your browser.</p>
+  <p class="hint">Houses in Minneapolis only (not condos or duplexes yet). What you type stays in your browser. If you use your location, your browser asks first, and the coordinates go to OpenStreetMap only to find your street.</p>
+  <div class="examples">Try <button type="button" class="btn" id="try-example" data-q="2959 Lincoln St">2959 Lincoln St</button> <button type="button" class="btn" id="use-location">📍 Use my location</button></div>
+  <div class="examples" id="near"><span id="near-msg"></span><span id="near-chips" style="display:contents"></span></div>
 
   <div id="result"></div>
 
@@ -125,10 +115,20 @@ footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16p
   <footer>
     <p><b>This is not an appraisal, and not legal or tax advice.</b> It can be wrong, and it can't see a home's condition or updates. Not affiliated with the City of Minneapolis, Hennepin County or the State of Minnesota.</p>
     <p><b>Data.</b> City of Minneapolis open data: <a href="https://opendata.minneapolismn.gov/datasets/assessing-department-parcel-data-2026">Assessing Department Parcel Data</a>, <a href="https://opendata.minneapolismn.gov/">CCS Permits, CaseInspections and Active Rental Licenses</a>. <a href="https://gis-hennepin.opendata.arcgis.com/datasets/7975aabf6e1e42998a40a4b085ffefdf_1">Hennepin County GIS: County Parcels</a> (furnished "as is", without warranty). <a href="https://metrogis.org/how-do-i-get/parcel-data/">MetroGIS Regional Parcel Dataset</a> (Metropolitan Council and the seven metro counties), 2021–2025 snapshots. Property records are public under the <a href="https://mn.gov/admin/data-practices/data/rules/laws/">Minnesota Government Data Practices Act</a>.</p>
-    <p><b>Methods.</b> Ratio statistics follow the <a href="https://www.revenue.state.mn.us/sales-ratio-studies">MN Dept. of Revenue sales ratio studies</a> and the <a href="https://www.iaao.org/wp-content/uploads/Standard_on_Ratio_Studies.pdf">IAAO Standard on Ratio Studies</a>. The regressivity check was compared with the <a href="https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html">UChicago Property Tax Project</a> (Berry). The model's price index, nearby-sales features and use of gradient-boosted trees draw on the <a href="https://github.com/ccao-data/model-res-avm">Cook County Assessor's Office open-source valuation model</a>. Ranges use conformalized quantile regression (<a href="https://arxiv.org/abs/1905.03222">Romano, Patterson &amp; Candès, 2019</a>). Built with <a href="https://scikit-learn.org/">scikit-learn</a> (Pedregosa et al., 2011) and <a href="https://pandas.pydata.org/">pandas</a>. PDF download uses <a href="https://github.com/eKoopmans/html2pdf.js">html2pdf.js</a> (MIT license). Code: <a href="https://github.com/KennedyJohnson/twin-cities-property-assessment">GitHub</a>.</p>
+    <p><b>Methods.</b> Ratio statistics follow the <a href="https://www.revenue.state.mn.us/sales-ratio-studies">MN Dept. of Revenue sales ratio studies</a> and the <a href="https://www.iaao.org/wp-content/uploads/Standard_on_Ratio_Studies.pdf">IAAO Standard on Ratio Studies</a>. The regressivity check was compared with the <a href="https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html">UChicago Property Tax Project</a> (Berry). The model's price index, nearby-sales features and use of gradient-boosted trees draw on the <a href="https://github.com/ccao-data/model-res-avm">Cook County Assessor's Office open-source valuation model</a>. Ranges use conformalized quantile regression (<a href="https://arxiv.org/abs/1905.03222">Romano, Patterson &amp; Candès, 2019</a>). Built with <a href="https://scikit-learn.org/">scikit-learn</a> (Pedregosa et al., 2011) and <a href="https://pandas.pydata.org/">pandas</a>. PDF download uses <a href="https://github.com/eKoopmans/html2pdf.js">html2pdf.js</a> (MIT license). Code: <a href="https://github.com/KennedyJohnson/twin-cities-property-assessment">GitHub</a> · <a href="https://kennedyjohnson.github.io/">Back to portfolio</a>.</p>
   </footer>
 </main>
 <script src="app.js"></script>
+<script>
+document.getElementById("try-example").addEventListener("click", function (e) {
+  var q = document.getElementById("q");
+  q.value = e.currentTarget.dataset.q;
+  q.dispatchEvent(new Event("input"));
+  setTimeout(function () { var b = document.querySelector("#suggest button"); if (b) b.click(); }, 50);
+});
+</script>
+<script src="nearby.js"></script>
+
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3d8de94c97044ab3a52df3918fc58f61"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
