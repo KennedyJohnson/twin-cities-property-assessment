@@ -87,3 +87,10 @@ Raw downloads live in `data/` (gitignored). `site/` is deployed to GitHub Pages 
 ## Disclaimer
 
 Estimates are statistical and can be wrong. This tool does not provide appraisals, legal advice or tax advice, and is not affiliated with Hennepin County, the City of Minneapolis or the State of Minnesota. Always review your official valuation notice and contact your assessor before filing an appeal.
+
+## Tools used
+
+- Python
+- scikit-learn
+- Conformal prediction
+- GitHub Pages
