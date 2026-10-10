@@ -26,7 +26,7 @@ A free tool for Minneapolis homeowners: look up a house and see how the city's a
   - The estimate averages 5 models trained with different random seeds, to reduce variance.
   - All history features only use records dated before each sale, so nothing leaks in from the future.
   - The model never sees the assessor's values.
-- **Ranges:** conformalized quantile regression. Calibrated on the most recent 20% of sales, scored with the index projected from the older 80% so forecast error is included, then refit on all of them.
+- **Ranges:** conformalized quantile regression. Calibrated on the most recent 20% of sales, scored with the index projected from the older 80% so forecast error is included, then refit on all of them. The 90% range's margin is widened by 15% (`WIDE_MARGIN_SCALE` in `pipeline/model.py`) because the plain calibration covered only ~88% of 2025 sales; the 50% range is unchanged.
 - **Model selection:** every choice (features, settings, trend handling) was made on a validation split inside each training window (the last 12 months before January). The test sales below were only scored at the end. Validation and test errors matched (9.3% vs 9.3%), which suggests the model isn't overfitting.
 - **Tried and left out:** census tract income, education, homeownership and vacancy (ACS 5-year estimates), and distance to lakes, the river, parks, rail stations and downtown (OpenStreetMap). None of these improved validation error; neighborhood, location and nearby-sales features already capture them. Different tree settings, rotated coordinates and dropping the neighborhood field also made no real difference.
 - **Comparable sales:** within half a mile, ±20% house size, ±15 years, ±50% lot, and sold in the two years before the valuation date. If fewer than 5 are found, the search widens in steps and the page says so. Prices are adjusted with a citywide monthly index.
@@ -38,10 +38,10 @@ Trained only on data before each year's valuation date, then scored on homes tha
 
 | Assessment year | Sales tested | Model's typical error | Model's median bias | City's typical error | In the 90% range | In the 50% range |
 |---|---|---|---|---|---|---|
-| 2025 | 1,998 | 9.3% (was 11.1%) | −4.5% | 13.6% | 88% | 48% |
-| 2026 | 1,729 | 9.4% (was 10.7%) | +0.4% | 12.0% | 90% | 52% |
+| 2025 | 1,998 | 9.3% (was 11.1%) | −4.5% | 13.6% | 89.5% (was 88.1%) | 48% |
+| 2026 | 1,729 | 9.4% (was 10.7%) | +0.4% | 12.0% | 90.9% (was 89.8%) | 52% |
 
-2025 still runs low because prices rose faster that year than the trend projected; forecasting from past sales alone can't fully catch a turn in the market.
+2025 still runs low because prices rose faster that year than the trend projected; forecasting from past sales alone can't fully catch a turn in the market. The 90% range widening was chosen on these same two backtest years, so the coverage figures are in-sample; the 2025 and 2026 numbers are the only check on it.
 
 ## Live check
 

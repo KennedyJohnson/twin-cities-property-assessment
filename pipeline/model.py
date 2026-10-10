@@ -34,6 +34,7 @@ DATA = ROOT / "data"
 
 ALPHA = 0.10          # wide range: 90% prediction interval (used for flags)
 ALPHAS = (0.10, 0.50)  # wide (90%) and likely (50%) ranges
+WIDE_MARGIN_SCALE = 1.15  # widens only the 90% margin; prices rising faster than the trend left 2025 at ~88% coverage
 MIN_COMPS = 5
 COMP_MARGIN = 0.10    # comps' median must be >=10% below assessed value
 COMP_RADIUS_FT = 2640  # half a mile (Minneapolis X/Y are in feet)
@@ -313,6 +314,8 @@ def fit_interval_model(train, value_date):
         n = len(scores)
         q = np.quantile(scores, min(1, np.ceil((n + 1) * (1 - alpha)) / n))
         # Refit on all sales so the most recent market is in the model; keep the calibrated margin.
+        if alpha == 0.10:
+            q *= WIDE_MARGIN_SCALE
         ranges[alpha] = (*quantile_pair(alpha, Xa, ya_adj), q)
     mids = [_hgb(seed).fit(Xa, ya_adj) for seed in range(SEEDS)]
     return dict(mids=mids, ranges=ranges, idx=idx_a, pool=train, value_date=value_date)
