@@ -188,7 +188,7 @@
   // ---- citywide + methods ----
   fetch("data/summary.json").then((r) => r.json()).then((s) => {
     summary = s;
-    $("year").textContent = s.assessment_year;
+    if ($("year")) $("year").textContent = s.assessment_year;
     // Data refreshes monthly; warn if the refresh job has stopped.
     if ((Date.now() - new Date(s.built)) / 86400000 > 60) {
       const b = document.createElement("div");
