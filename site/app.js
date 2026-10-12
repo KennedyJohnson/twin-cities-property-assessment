@@ -13,7 +13,7 @@
   const norm = (s) => s.toUpperCase().replace(/[.,#]/g, " ").replace(/\b[A-Z]+\b/g, (w) => ABBR[w] || w)
     .replace(/\s+/g, " ").trim();
   // The Twin Cities Living Quality Map links here with #<address>, and this page links back with ?q=.
-  const MAP_URL = "https://twin-cities-living-quality-map.vercel.app/";
+  const MAP_URL = "https://twin-cities-living-quality-map.ken-j.workers.dev/";
 
   function el(tag, attrs, parent, textContent) {
     const n = document.createElementNS(NS, tag);
