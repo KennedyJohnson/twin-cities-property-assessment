@@ -55,18 +55,16 @@ a { color: var(--accent); }
 .note { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink2); }
 footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: 13px; }
 
-/* Field Documents theme: county valuation notice on plat-map grid paper. */
+/* Field Documents theme: county valuation notice . */
 :root {
   color-scheme: light;
-  --bg: #f3f5ef; --card: #fbfcf8; --border: #22301f; --grid: #d9e0d2;
-  --ink: #1d2a1c; --ink2: #3b4a39; --muted: #63705f;
-  --accent: #1f5c3a; --accent-soft: #e2ecdf; --on-accent: #fff; --warm: #b3261e; --band: #1f5c3a;
+  --bg: #f5f4ef; --card: #ffffff; --border: #2a2a26; --grid: #e2e0d8;
+  --ink: #161614; --ink2: #2f2f2b; --muted: #4f4f49;
+  --accent: #14532d; --accent-soft: #e4efe7; --on-accent: #fff; --warm: #b3261e; --band: #1f5c3a;
   --type: "Courier Prime", "Courier New", monospace;
 }
-body { font-family: "IBM Plex Sans", system-ui, sans-serif;
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 22px 22px; }
-h1, h2, h3, .eyebrow, th { font-family: var(--type); }
+body { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+h1, h2, .eyebrow { font-family: var(--type); }
 h1 { font-weight: 700; letter-spacing: -0.01em; }
 h3 { text-transform: uppercase; letter-spacing: .06em; font-size: 14px; }
 .card { border: 2px solid var(--border); border-radius: 0; box-shadow: 4px 4px 0 var(--grid); }
@@ -75,7 +73,7 @@ h3 { text-transform: uppercase; letter-spacing: .06em; font-size: 14px; }
 .stat { background: var(--card); border: 1px dashed var(--muted); border-radius: 0; }
 .stat .v { font-family: var(--type); }
 .btn, .examples .btn { border-radius: 0; border: 1px solid var(--border); font-family: var(--type); }
-.verdict { border-left: 0; display: inline-block; border: 3px solid var(--warm); color: var(--ink); padding: 4px 12px; transform: rotate(-1.5deg); font-family: var(--type); font-weight: 700; }
+.verdict { border-left: 0; display: inline-block; border: 3px solid var(--warm); color: var(--ink); padding: 4px 12px; transform: rotate(-1.5deg); font-weight: 700; }
 th, td { border-bottom: 1px dotted var(--muted); }
 svg text { font-family: "IBM Plex Sans", sans-serif; }
 footer { border-top: 2px solid var(--border); }
