@@ -6,7 +6,7 @@
 <title>Minneapolis Assessment Check</title>
 <meta name="description" content="Free context on a Minneapolis home's assessed value: how it compares with similar nearby sales, built on public data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
   color-scheme: dark;
@@ -54,6 +54,32 @@ a { color: var(--accent); }
 .examples .btn { font-size: 13px; padding: 4px 10px; border-radius: 20px; }
 .note { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink2); }
 footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: 13px; }
+
+/* Field Documents theme: county valuation notice on plat-map grid paper. */
+:root {
+  color-scheme: light;
+  --bg: #f3f5ef; --card: #fbfcf8; --border: #22301f; --grid: #d9e0d2;
+  --ink: #1d2a1c; --ink2: #3b4a39; --muted: #63705f;
+  --accent: #1f5c3a; --accent-soft: #e2ecdf; --on-accent: #fff; --warm: #b3261e; --band: #1f5c3a;
+  --type: "Courier Prime", "Courier New", monospace;
+}
+body { font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px; }
+h1, h2, h3, .eyebrow, th { font-family: var(--type); }
+h1 { font-weight: 700; letter-spacing: -0.01em; }
+h3 { text-transform: uppercase; letter-spacing: .06em; font-size: 14px; }
+.card { border: 2px solid var(--border); border-radius: 0; box-shadow: 4px 4px 0 var(--grid); }
+.search input { border: 2px solid var(--border); border-radius: 0; background: #fff; font-family: var(--type); }
+.suggest { border: 2px solid var(--border); border-radius: 0; }
+.stat { background: var(--card); border: 1px dashed var(--muted); border-radius: 0; }
+.stat .v { font-family: var(--type); }
+.btn, .examples .btn { border-radius: 0; border: 1px solid var(--border); font-family: var(--type); }
+.verdict { border-left: 0; display: inline-block; border: 3px solid var(--warm); color: var(--ink); padding: 4px 12px; transform: rotate(-1.5deg); font-family: var(--type); font-weight: 700; }
+th, td { border-bottom: 1px dotted var(--muted); }
+svg text { font-family: "IBM Plex Sans", sans-serif; }
+footer { border-top: 2px solid var(--border); }
+footer .byline { font-family: var(--type); font-weight: 700; color: var(--ink); text-transform: uppercase; letter-spacing: .08em; }
 @media print { .search, #about, #fairness, #privacy, .noprint { display: none !important; } body { background: #fff; } .card { border: 0; } }
 </style>
 </head>
@@ -112,6 +138,7 @@ footer { margin-top: 64px; border-top: 1px solid var(--border); padding-top: 16p
   </section>
 
   <footer>
+    <p class="byline">A project by <a href="https://kennedyjohnson.github.io/">Ken Johnson</a></p>
     <p><b>This is not an appraisal, and not legal or tax advice.</b> It can be wrong, and it can't see a home's condition or updates. Not affiliated with the City of Minneapolis, Hennepin County or the State of Minnesota.</p>
     <p><b>Data.</b> City of Minneapolis open data: <a href="https://opendata.minneapolismn.gov/datasets/assessing-department-parcel-data-2026">Assessing Department Parcel Data</a>, <a href="https://opendata.minneapolismn.gov/">CCS Permits, CaseInspections and Active Rental Licenses</a>. <a href="https://gis-hennepin.opendata.arcgis.com/datasets/7975aabf6e1e42998a40a4b085ffefdf_1">Hennepin County GIS: County Parcels</a> (furnished "as is", without warranty). <a href="https://metrogis.org/how-do-i-get/parcel-data/">MetroGIS Regional Parcel Dataset</a> (Metropolitan Council and the seven metro counties), 2021–2025 snapshots. Property records are public under the <a href="https://mn.gov/admin/data-practices/data/rules/laws/">Minnesota Government Data Practices Act</a>.</p>
     <p><b>Methods.</b> Ratio statistics follow the <a href="https://www.revenue.state.mn.us/sales-ratio-studies">MN Dept. of Revenue sales ratio studies</a> and the <a href="https://www.iaao.org/wp-content/uploads/Standard_on_Ratio_Studies.pdf">IAAO Standard on Ratio Studies</a>. The regressivity check was compared with the <a href="https://s3.us-east-2.amazonaws.com/propertytaxdata.uchicago.edu/nationwide_reports/web/Hennepin%20County_Minnesota.html">UChicago Property Tax Project</a> (Berry). The model's price index, nearby-sales features and use of gradient-boosted trees draw on the <a href="https://github.com/ccao-data/model-res-avm">Cook County Assessor's Office open-source valuation model</a>. Ranges use conformalized quantile regression (<a href="https://arxiv.org/abs/1905.03222">Romano, Patterson &amp; Candès, 2019</a>). Built with <a href="https://scikit-learn.org/">scikit-learn</a> (Pedregosa et al., 2011) and <a href="https://pandas.pydata.org/">pandas</a>. PDF download uses <a href="https://github.com/eKoopmans/html2pdf.js">html2pdf.js</a> (MIT license). Code: <a href="https://github.com/KennedyJohnson/twin-cities-property-assessment">GitHub</a> · <a href="https://kennedyjohnson.github.io/">Back to portfolio</a>.</p>
