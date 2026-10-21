@@ -1,31 +1,31 @@
 {
  "assessment_year": 2026,
  "value_date": "2026-01-01",
- "built": "2026-10-03",
+ "built": "2026-10-21",
  "parcels": 74614,
- "with_context": 73728,
- "training_sales": 13714,
+ "with_context": 73727,
+ "training_sales": 13530,
  "estimate_month": "2026-10",
  "backtest": {
   "2025": {
-   "train_sales": 15248,
-   "test_sales": 1998,
-   "model_median_abs_pct_error": 0.09525975583762764,
-   "model_median_ratio": 0.9608987204500614,
-   "assessor_median_ratio": 0.8955420654114281,
-   "assessor_median_abs_pct_error": 0.13606553147574818,
-   "interval_coverage": 0.8768768768768769,
-   "likely_range_coverage": 0.497997997997998
+   "train_sales": 15180,
+   "test_sales": 1992,
+   "model_median_abs_pct_error": 0.09272916557144378,
+   "model_median_ratio": 0.959343190448406,
+   "assessor_median_ratio": 0.8953682437605268,
+   "assessor_median_abs_pct_error": 0.1358370204696845,
+   "interval_coverage": 0.9016064257028112,
+   "likely_range_coverage": 0.5070281124497992
   },
   "2026": {
-   "train_sales": 14639,
-   "test_sales": 1729,
-   "model_median_abs_pct_error": 0.0955629125377655,
-   "model_median_ratio": 1.0014154803435416,
-   "assessor_median_ratio": 0.9257142857142857,
-   "assessor_median_abs_pct_error": 0.12,
-   "interval_coverage": 0.902834008097166,
-   "likely_range_coverage": 0.5170618854829381
+   "train_sales": 14573,
+   "test_sales": 1947,
+   "model_median_abs_pct_error": 0.09565062911402467,
+   "model_median_ratio": 0.9975232806434321,
+   "assessor_median_ratio": 0.926046511627907,
+   "assessor_median_abs_pct_error": 0.12060000000000004,
+   "interval_coverage": 0.8936825885978429,
+   "likely_range_coverage": 0.5187467899332306
   }
  },
  "flag_backtest": {
@@ -33,192 +33,192 @@
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.011318581225889413,
-   "not_enough_data_share": 0.2009885340762966,
+   "flagged_share_all_parcels": 0.007862730390055722,
+   "not_enough_data_share": 0.2012430347192456,
    "flagged_test_sales": 13,
-   "flagged_sold_at_or_above_assessed": 0.23076923076923078,
-   "flagged_median_sale_to_assessed": 0.8955962394854032,
-   "in_line_sold_below_90pct_of_assessed": 0.09878682842287695
+   "flagged_sold_at_or_above_assessed": 0.3076923076923077,
+   "flagged_median_sale_to_assessed": 0.9013698630136986,
+   "in_line_sold_below_90pct_of_assessed": 0.09860788863109049
   },
   "2026": {
    "model_margin": 0.0,
    "comp_margin": 0.1,
    "min_comps": 5,
-   "flagged_share_all_parcels": 0.00676816683196183,
-   "not_enough_data_share": 0.20040474977886188,
-   "flagged_test_sales": 2,
-   "flagged_sold_at_or_above_assessed": 0.0,
-   "flagged_median_sale_to_assessed": 0.7088983203632885,
-   "in_line_sold_below_90pct_of_assessed": 0.14182058047493404
+   "flagged_share_all_parcels": 0.0067815691425201705,
+   "not_enough_data_share": 0.1996140134559198,
+   "flagged_test_sales": 4,
+   "flagged_sold_at_or_above_assessed": 0.25,
+   "flagged_median_sale_to_assessed": 0.8412571884074475,
+   "in_line_sold_below_90pct_of_assessed": 0.14385964912280702
   }
  },
  "fairness": {
   "overall": {
-   "n": 1599,
+   "n": 1795,
    "median_ratio": 0.919,
-   "cod": 11.3,
-   "prd": 1.011,
-   "share_over_110": 0.101
+   "cod": 11.4,
+   "prd": 1.01,
+   "share_over_110": 0.1
   },
-  "trimmed": 130,
+  "trimmed": 152,
   "by_price_decile": [
    {
-    "n": 167,
-    "median_ratio": 0.931,
-    "cod": 16.1,
-    "prd": 1.008,
-    "share_over_110": 0.257,
+    "n": 184,
+    "median_ratio": 0.92,
+    "cod": 16.6,
+    "prd": 1.005,
+    "share_over_110": 0.245,
     "price_min": 100000,
     "price_max": 225000
    },
    {
-    "n": 153,
-    "median_ratio": 0.949,
-    "cod": 13.4,
+    "n": 175,
+    "median_ratio": 0.942,
+    "cod": 14.0,
     "prd": 1.001,
-    "share_over_110": 0.17,
-    "price_min": 226512,
-    "price_max": 265000
+    "share_over_110": 0.171,
+    "price_min": 225400,
+    "price_max": 267000
    },
    {
-    "n": 166,
-    "median_ratio": 0.94,
-    "cod": 11.7,
-    "prd": 0.999,
-    "share_over_110": 0.139,
-    "price_min": 267000,
+    "n": 185,
+    "median_ratio": 0.943,
+    "cod": 11.5,
+    "prd": 1.0,
+    "share_over_110": 0.141,
+    "price_min": 267500,
     "price_max": 300000
    },
    {
-    "n": 165,
-    "median_ratio": 0.967,
-    "cod": 10.7,
+    "n": 186,
+    "median_ratio": 0.957,
+    "cod": 10.8,
     "prd": 1.0,
-    "share_over_110": 0.139,
+    "share_over_110": 0.129,
     "price_min": 301000,
     "price_max": 330000
    },
    {
-    "n": 151,
-    "median_ratio": 0.94,
-    "cod": 10.5,
+    "n": 170,
+    "median_ratio": 0.937,
+    "cod": 10.4,
     "prd": 1.0,
-    "share_over_110": 0.113,
+    "share_over_110": 0.106,
     "price_min": 331000,
-    "price_max": 360000
+    "price_max": 362500
    },
    {
-    "n": 159,
-    "median_ratio": 0.905,
-    "cod": 8.2,
+    "n": 200,
+    "median_ratio": 0.901,
+    "cod": 9.0,
     "prd": 1.0,
-    "share_over_110": 0.025,
-    "price_min": 361000,
-    "price_max": 399000
+    "share_over_110": 0.045,
+    "price_min": 363000,
+    "price_max": 400000
    },
    {
-    "n": 169,
-    "median_ratio": 0.925,
-    "cod": 9.7,
+    "n": 166,
+    "median_ratio": 0.929,
+    "cod": 10.0,
     "prd": 1.0,
-    "share_over_110": 0.077,
-    "price_min": 399900,
+    "share_over_110": 0.078,
+    "price_min": 400500,
     "price_max": 440000
    },
    {
-    "n": 149,
-    "median_ratio": 0.879,
-    "cod": 10.3,
-    "prd": 1.0,
-    "share_over_110": 0.013,
-    "price_min": 441000,
-    "price_max": 507250
-   },
-   {
-    "n": 167,
-    "median_ratio": 0.893,
-    "cod": 9.1,
+    "n": 173,
+    "median_ratio": 0.88,
+    "cod": 10.4,
     "prd": 1.0,
     "share_over_110": 0.012,
-    "price_min": 510000,
+    "price_min": 441000,
+    "price_max": 510000
+   },
+   {
+    "n": 184,
+    "median_ratio": 0.894,
+    "cod": 9.2,
+    "prd": 1.0,
+    "share_over_110": 0.022,
+    "price_min": 512000,
     "price_max": 650000
    },
    {
-    "n": 153,
-    "median_ratio": 0.887,
-    "cod": 9.8,
+    "n": 172,
+    "median_ratio": 0.888,
+    "cod": 9.6,
     "prd": 0.996,
-    "share_over_110": 0.052,
+    "share_over_110": 0.047,
     "price_min": 651000,
     "price_max": 2400000
    }
   ],
   "by_community": {
    "CAMDEN": {
-    "n": 263,
+    "n": 301,
     "median_ratio": 0.898,
-    "cod": 12.2,
-    "prd": 1.006,
-    "share_over_110": 0.095
+    "cod": 12.3,
+    "prd": 1.005,
+    "share_over_110": 0.09
    },
    "LONGFELLOW": {
-    "n": 142,
-    "median_ratio": 0.9,
-    "cod": 11.8,
-    "prd": 1.028,
-    "share_over_110": 0.106
+    "n": 165,
+    "median_ratio": 0.901,
+    "cod": 11.7,
+    "prd": 1.026,
+    "share_over_110": 0.103
    },
    "NEAR NORTH": {
-    "n": 125,
-    "median_ratio": 0.947,
-    "cod": 15.6,
-    "prd": 1.007,
-    "share_over_110": 0.208
+    "n": 133,
+    "median_ratio": 0.922,
+    "cod": 16.5,
+    "prd": 1.003,
+    "share_over_110": 0.211
    },
    "NOKOMIS": {
-    "n": 318,
+    "n": 350,
     "median_ratio": 0.92,
-    "cod": 9.9,
-    "prd": 1.011,
-    "share_over_110": 0.053
-   },
-   "NORTHEAST": {
-    "n": 197,
-    "median_ratio": 0.917,
     "cod": 10.3,
     "prd": 1.013,
-    "share_over_110": 0.096
+    "share_over_110": 0.063
+   },
+   "NORTHEAST": {
+    "n": 215,
+    "median_ratio": 0.916,
+    "cod": 10.3,
+    "prd": 1.013,
+    "share_over_110": 0.084
    },
    "POWDERHORN": {
-    "n": 177,
-    "median_ratio": 0.94,
-    "cod": 11.4,
-    "prd": 1.013,
+    "n": 196,
+    "median_ratio": 0.935,
+    "cod": 11.8,
+    "prd": 1.012,
     "share_over_110": 0.102
    },
    "SOUTHWEST": {
-    "n": 242,
-    "median_ratio": 0.924,
+    "n": 282,
+    "median_ratio": 0.926,
     "cod": 9.9,
     "prd": 1.021,
-    "share_over_110": 0.083
+    "share_over_110": 0.089
    },
    "UNIVERSITY": {
-    "n": 32,
-    "median_ratio": 0.908,
-    "cod": 13.3,
-    "prd": 1.006,
-    "share_over_110": 0.156
+    "n": 37,
+    "median_ratio": 0.939,
+    "cod": 12.0,
+    "prd": 1.005,
+    "share_over_110": 0.135
    },
    "UPTOWN": {
-    "n": 84,
-    "median_ratio": 0.929,
-    "cod": 10.4,
-    "prd": 1.004,
-    "share_over_110": 0.131
+    "n": 96,
+    "median_ratio": 0.935,
+    "cod": 10.2,
+    "prd": 1.003,
+    "share_over_110": 0.125
    }
   }
  },
  "live": [],
- "fairness_window": "sales Jan 2026\u2013Aug 2026"
+ "fairness_window": "sales Jan 2026\u2013Sep 2026"
 }
