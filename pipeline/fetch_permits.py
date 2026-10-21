@@ -19,10 +19,11 @@ from arcgis import fetch_layer
 URL = "https://services.arcgis.com/afSMGVsC7QlRK1kZ/arcgis/rest/services/CCS_Permits/FeatureServer/0"
 OUT = Path(__file__).resolve().parent.parent / "data"
 FIELDS = ["OBJECTID", "APN", "permitNumber", "permitType", "occupancyType", "workType", "status",
-          "value", "totalFees", "comments", "issueDate", "completeDate"]
+          "permit_Value", "totalFees", "comments", "issueDate", "completeDate"]
 
 if __name__ == "__main__":
     df = fetch_layer(URL, "occupancyType = 'SFD'", FIELDS, page=16000)
+    df = df.rename(columns={"permit_Value": "value"})  # city renamed the field in Oct 2026
     for c in ["issueDate", "completeDate"]:
         df[c] = pd.to_datetime(df[c], unit="ms", errors="coerce")
     OUT.mkdir(exist_ok=True)
