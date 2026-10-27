@@ -25,7 +25,9 @@
     return keysPromise;
   }
 
-  function say(html) { $("near-msg").innerHTML = html; }
+  // textContent, not innerHTML: the street/city names come from Nominatim, and OSM name tags are user-editable
+  // (a tag like "<img src=x onerror=...>" would otherwise run in this origin).
+  function say(text) { $("near-msg").textContent = text; }
 
   function showChips(list) {
     var box = $("near-chips");
