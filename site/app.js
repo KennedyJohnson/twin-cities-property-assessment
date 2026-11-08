@@ -27,17 +27,22 @@
 
   // ---- search ----
   const getJSON = (url) => fetch(url).then((r) => { if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r.json(); });
-  let indexFailed = false;
-  getJSON("data/addresses.json").then((d) => { index = d; keys = Object.keys(d); }).catch((err) => {
+  // Address index: loading -> ready | failed. indexReady resolves true once `index` is set, false if it failed.
+  const indexReady = getJSON("data/addresses.json").then((d) => { index = d; keys = Object.keys(d); return true; }).catch((err) => {
     console.error(err);
-    indexFailed = true;
     $("q").placeholder = "Address search couldn't load. Try refreshing the page.";
+    return false;
   });
   let active = -1, matches = [];
   $("q").addEventListener("input", () => {
     const q = norm($("q").value);
     const box = $("suggest");
-    if (!index || q.length < 3) { box.hidden = true; return; }
+    if (q.length < 3) { box.hidden = true; return; }
+    if (!index) { // still loading (or failed): say so instead of showing nothing; refreshed once loaded, below
+      box.innerHTML = `<div class="muted small" style="padding:10px 16px">Loading addresses…</div>`;
+      box.hidden = false;
+      return;
+    }
     matches = [];
     for (const k of keys) { if (k.startsWith(q)) { matches.push(k); if (matches.length >= 8) break; } }
     if (matches.length < 8) for (const k of keys) { if (!k.startsWith(q) && k.includes(q)) { matches.push(k); if (matches.length >= 8) break; } }
@@ -45,6 +50,11 @@
     box.innerHTML = matches.map((m, i) => `<button type="button" data-i="${i}">${esc(title(m))} <span class="muted small">${index[m]}</span></button>`).join("")
       || `<div class="muted small" style="padding:10px 16px">No matching single-family home in Minneapolis.</div>`;
     box.hidden = false;
+  });
+  // Typed before the index arrived: show real suggestions now (or hide "Loading addresses…" if it failed).
+  indexReady.then((ok) => {
+    if (ok && !$("suggest").hidden) $("q").dispatchEvent(new Event("input"));
+    else if (!ok) $("suggest").hidden = true;
   });
   $("q").addEventListener("keydown", (e) => {
     const btns = [...$("suggest").querySelectorAll("button")];
@@ -64,7 +74,10 @@
   });
   document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $("suggest").hidden = true; });
 
+  // Only the latest pick may render (a slow zip file for an earlier pick must not replace it).
+  let pickSeq = 0;
   async function choose(addr) {
+    const pick = ++pickSeq;
     $("suggest").hidden = true;
     $("q").value = title(addr);
     const zc = index[addr];
@@ -72,9 +85,11 @@
       if (!zipCache[zc]) zipCache[zc] = await getJSON(`data/zip/${zc}.json`);
     } catch (err) {
       console.error(err);
+      if (pick !== pickSeq) return;
       $("result").innerHTML = `<div class="card"><p>Couldn't load this home's details. Check your connection and try again.</p></div>`;
       return;
     }
+    if (pick !== pickSeq) return;
     render(zipCache[zc][addr], zc);
     history.replaceState(null, "", "#" + encodeURIComponent(addr));
   }
@@ -252,14 +267,12 @@
     // A hash that isn't an exact key (e.g. "3217 48th Avenue South" from the map) is normalized; failing that it
     // pre-fills the search box so the suggestions show.
     if (hash) {
-      const wait = setInterval(() => {
-        if (indexFailed) clearInterval(wait);
-        if (!index) return;
-        clearInterval(wait);
+      indexReady.then((ok) => {
+        if (!ok) return;
         const key = index[hash] ? hash : norm(hash);
         if (index[key]) choose(key);
         else { $("q").value = hash; $("q").dispatchEvent(new Event("input")); $("q").focus(); }
-      }, 100);
+      });
     }
   });
 })();
