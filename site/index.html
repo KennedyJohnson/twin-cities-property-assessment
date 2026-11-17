@@ -79,6 +79,14 @@ svg text { font-family: "IBM Plex Sans", sans-serif; }
 footer { border-top: 2px solid var(--border); }
 footer .byline { font-family: var(--type); font-weight: 700; color: var(--ink); text-transform: uppercase; letter-spacing: .08em; }
 @media print { .search, #about, #fairness, #privacy, .noprint { display: none !important; } body { background: #fff; } .card { border: 0; } }
+
+/* UI baseline: keyboard focus, reduced motion, text wrapping */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(h1, h2, h3) { text-wrap: balance; }
+:where(p, li, figcaption) { text-wrap: pretty; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
 </style>
 </head>
 <body>
